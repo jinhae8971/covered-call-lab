@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>커버드콜 ETF 리서치 대시보드</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0e1116; --panel:#161b22; --panel2:#1c2230; --line:#2a3140;
+  --tx:#e6edf3; --tx2:#9aa7b8; --tx3:#6b7787;
+  --g1:#e05252; --g2:#e8933a; --g3:#4a9eea; --g4:#a86fd6; --bm:#6b7787;
+  --pos:#3fb950; --neg:#f4574f; --acc:#4a9eea;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);
+  font-family:'Pretendard','Malgun Gothic','Apple SD Gothic Neo',system-ui,-apple-system,sans-serif;
+  font-size:14px;line-height:1.6}
+.wrap{max-width:1600px;margin:0 auto;padding:28px 22px 80px}
+h1{font-size:26px;margin:0 0 4px;letter-spacing:-.5px}
+h2{font-size:17px;margin:0 0 14px;letter-spacing:-.3px;display:flex;align-items:center;gap:9px}
+h2 .bar{width:3px;height:16px;background:var(--acc);border-radius:2px}
+.sub{color:var(--tx2);font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:1100px){.g2,.g3{grid-template-columns:1fr}}
+
+/* KPI */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.kpi .l{color:var(--tx3);font-size:11px;letter-spacing:.4px;text-transform:uppercase}
+.kpi .v{font-size:22px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .n{color:var(--tx2);font-size:11px;margin-top:2px}
+
+/* 계보 */
+.gen-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:1000px){.gen-row{grid-template-columns:1fr}}
+.gen{background:var(--panel2);border-radius:10px;padding:16px;border-top:3px solid var(--c)}
+.gen .t{font-weight:700;font-size:14px;color:var(--c);margin-bottom:6px}
+.gen .d{font-size:12.5px;color:var(--tx2);line-height:1.65}
+.gen .m{margin-top:11px;padding-top:10px;border-top:1px solid var(--line);display:flex;gap:14px;flex-wrap:wrap}
+.gen .m div{font-size:11px;color:var(--tx3)}
+.gen .m b{display:block;font-size:16px;color:var(--tx);font-variant-numeric:tabular-nums}
+
+/* 컨트롤 */
+.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.chip{background:var(--panel2);border:1px solid var(--line);color:var(--tx2);border-radius:20px;
+  padding:6px 14px;font-size:12.5px;cursor:pointer;transition:.15s;user-select:none}
+.chip:hover{border-color:var(--acc);color:var(--tx)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+input[type=search]{background:var(--panel2);border:1px solid var(--line);color:var(--tx);
+  border-radius:8px;padding:7px 12px;font-size:13px;min-width:200px;outline:none;font-family:inherit}
+input[type=search]:focus{border-color:var(--acc)}
+
+/* 테이블 */
+.tw{overflow-x:auto;border-radius:10px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:12.8px;min-width:1250px}
+th{background:var(--panel2);color:var(--tx2);font-weight:600;text-align:right;padding:11px 10px;
+  white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:2;font-size:11.5px}
+th:hover{color:var(--tx)}
+th.l,td.l{text-align:left}
+th .ar{color:var(--acc);margin-left:3px}
+td{padding:10px;border-top:1px solid var(--line);text-align:right;
+  white-space:nowrap;font-variant-numeric:tabular-nums}
+tbody tr:hover{background:#1b2230}
+tbody tr.bm{opacity:.62;background:#12161d}
+.tag{display:inline-block;padding:1.5px 7px;border-radius:5px;font-size:10.5px;font-weight:700;color:#fff}
+.nm{font-weight:600}
+.tk{color:var(--tx3);font-size:11px;margin-left:5px}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.mini{color:var(--tx3);font-size:11px}
+.sc{display:inline-block;min-width:38px;padding:2px 7px;border-radius:5px;font-weight:700;font-size:11.5px}
+
+/* 차트 */
+.ch{position:relative;height:330px}
+.note{font-size:12px;color:var(--tx3);margin-top:10px;line-height:1.7}
+
+/* 인사이트 */
+.ins{background:var(--panel2);border-left:3px solid var(--acc);border-radius:0 8px 8px 0;
+  padding:14px 16px;margin-bottom:11px}
+.ins .h{font-weight:700;margin-bottom:5px;font-size:13.5px}
+.ins .b{font-size:13px;color:var(--tx2);line-height:1.75}
+.warn{border-left-color:var(--neg)}
+.good{border-left-color:var(--pos)}
+
+footer{color:var(--tx3);font-size:11.5px;text-align:center;margin-top:34px;line-height:1.9}
+code{background:var(--panel2);padding:1px 6px;border-radius:4px;font-size:11.5px;color:#8fc4f0}
+/* ── 포트폴리오 ───────────────────────────────────────────── */
+.pf-top{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+.pf-actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--tx2);border-radius:8px;
+  padding:7px 13px;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.15s}
+.btn:hover{border-color:var(--acc);color:var(--tx)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.btn.dgr:hover{border-color:var(--neg);color:var(--neg)}
+table.pf{min-width:980px}
+table.pf td{padding:7px 9px}
+table.pf input,table.pf select{background:#0f141c;border:1px solid var(--line);color:var(--tx);
+  border-radius:6px;padding:6px 8px;font-size:12.5px;font-family:inherit;outline:none;
+  font-variant-numeric:tabular-nums;text-align:right;width:100%}
+table.pf input:focus,table.pf select:focus{border-color:var(--acc)}
+table.pf select{text-align:left}
+.pf-empty{text-align:center;color:var(--tx3);padding:34px 10px;font-size:13px;line-height:1.9}
+.bar-mini{height:5px;border-radius:3px;background:#252b36;overflow:hidden;margin-top:4px;min-width:56px}
+.bar-mini i{display:block;height:100%;background:var(--acc)}
+.pill{display:inline-block;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;
+  background:#252b36;color:var(--tx2)}
+.hint{font-size:11.5px;color:var(--tx3);margin-top:3px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+  <div>
+    <h1>커버드콜 ETF 계보 &amp; 총수익률 리서치</h1>
+    <div class="sub">QYLD(2013) → JEPQ(2022) → QQQI/GPIQ(2024) → 0DTE·부스티드(2026) · 미국 + 한국 상장 통합</div>
+  </div>
+  <div class="sub" style="text-align:right">
+    갱신: <b id="gen"></b><br>
+    <span style="color:var(--tx3)">다시 갱신하려면 <code>python build.py</code></span>
+  </div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="card" id="pfcard">
+  <div class="pf-top">
+    <h2 style="margin:0"><span class="bar"></span>내 포트폴리오</h2>
+    <div class="pf-actions">
+      <span class="pill" id="pfacct-lbl">계좌</span>
+      <span class="chip acct on" data-a="general">일반계좌</span>
+      <span class="chip acct" data-a="pension">연금계좌</span>
+      <span class="chip acct" data-a="isa">ISA</span>
+      <button class="btn" id="pfadd">＋ 종목 추가</button>
+      <button class="btn" id="pfexp">JSON 내보내기</button>
+      <button class="btn" id="pfimp">불러오기</button>
+      <input type="file" id="pffile" accept="application/json,.json" style="display:none">
+      <button class="btn dgr" id="pfclr">전체 삭제</button>
+    </div>
+  </div>
+
+  <div class="kpis" id="pfkpi" style="margin-bottom:16px"></div>
+
+  <div class="tw"><table class="pf" id="pftbl">
+    <thead><tr>
+      <th class="l">종목</th><th>보유수량</th><th>평균단가</th><th>현재가</th>
+      <th>평가금액(원)</th><th>평가손익</th><th>수익률</th>
+      <th>연 예상배당</th><th>현재비중</th><th>목표비중</th><th>조정금액</th><th></th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="pf-empty" id="pfempty" style="display:none">
+    아직 보유 종목이 없습니다. <b>＋ 종목 추가</b>로 시작해 보세요.<br>
+    입력한 내용은 이 브라우저에만 저장되며 저장소·서버로 전송되지 않습니다.
+  </div>
+  <div class="note" id="pfnote"></div>
+</div>
+
+<div class="grid g2" id="pfcharts" style="display:none">
+  <div class="card">
+    <h2><span class="bar"></span>보유 종목 총수익 추이 — 최근 3년</h2>
+    <div class="ch"><canvas id="cp1"></canvas></div>
+    <div class="note" id="np1"></div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>향후 12개월 예상 분배금</h2>
+    <div class="ch"><canvas id="cp2"></canvas></div>
+    <div class="note" id="np2"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="bar"></span>세대별 계보 — 각 세대가 풀려고 한 문제</h2>
+  <div class="gen-row" id="genrow"></div>
+  <div class="note" id="gennote"></div>
+</div>
+
+<div class="card">
+  <h2><span class="bar"></span>종목 비교 테이블</h2>
+  <div class="ctl">
+    <span class="chip on" data-f="mkt" data-v="ALL">전체</span>
+    <span class="chip" data-f="mkt" data-v="US">🇺🇸 미국</span>
+    <span class="chip" data-f="mkt" data-v="KR">🇰🇷 한국</span>
+    <span style="width:14px"></span>
+    <span class="chip on" data-f="gen" data-v="ALL">전 세대</span>
+    <span class="chip" data-f="gen" data-v="G1">1세대</span>
+    <span class="chip" data-f="gen" data-v="G2">2세대</span>
+    <span class="chip" data-f="gen" data-v="G3">3세대</span>
+    <span class="chip" data-f="gen" data-v="G4">4세대</span>
+    <span style="width:14px"></span>
+    <span class="chip on" data-f="bm" data-v="1">벤치마크 포함</span>
+    <input type="search" id="q" placeholder="종목명·티커 검색">
+  </div>
+  <div class="tw"><table id="tbl">
+    <thead><tr>
+      <th class="l" data-k="name">종목</th>
+      <th class="l" data-k="gen">세대</th>
+      <th data-k="ttm_yield">분배율<br>TTM</th>
+      <th data-k="tr_1y">총수익<br>1년</th>
+      <th data-k="excess_1y">원지수대비<br>초과수익</th>
+      <th data-k="capture_1y">상승<br>참여율</th>
+      <th data-k="mdd_edge_1y">낙폭<br>방어폭</th>
+      <th data-k="tr_3y">총수익<br>3년(연)</th>
+      <th data-k="tr_si">총수익<br>상장후(연)</th>
+      <th data-k="px_si">주가변화<br>상장후</th>
+      <th data-k="mdd_1y">MDD<br>1년</th>
+      <th data-k="mdd_si">MDD<br>전기간</th>
+      <th data-k="vol_1y">변동성<br>1년</th>
+      <th data-k="calmar_1y">Calmar<br>1년</th>
+      <th data-k="er">보수</th>
+      <th data-k="score">종합<br>점수</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <div class="note">
+    <b>종합점수</b> = 원지수 대비 초과수익(40%) + 총수익률 1년(15%) + 낙폭 방어폭(20%) + 분배율(15%) + 저보수(10%)의 백분위 가중합.<br>
+    <b>왜 절대수익이 아니라 초과수익인가</b> — 최근 1년 코스피는 +127%, 나스닥100은 +30% 올랐습니다. 절대수익으로 줄을 세우면 "한국 상품이 좋다"가 아니라 "한국 증시가 좋았다"를 측정하게 됩니다.
+    각 종목을 <b>자기 기초지수</b>와 비교해야 전략의 실력이 드러납니다.<br>
+    <b>상승참여율(capture)</b> = 종목 총수익 ÷ 원지수 총수익. 100%면 원지수를 그대로 따라간 것, 80%면 상승의 20%를 옵션 매도로 팔아넘긴 것입니다.
+    <b>낙폭 방어폭</b>은 원지수 MDD 대비 얼마나 덜 빠졌는지이며, 양수면 방어에 성공했다는 뜻입니다.<br>
+    <b>주가변화(상장후)</b>는 NAV 침식의 대용치입니다. 미국은 상장일 종가 대비, 한국은 상장기준가(10,000원) 대비입니다. 크게 마이너스면 "분배금이 사실상 원금 반환"이라는 신호입니다.<br>
+    <b>데이터 기준</b>: 미국은 Yahoo 배당재투자 조정종가, 한국은 네이버 수정주가(분배락 소급조정 = 분배금 재투자와 동일)입니다. 양쪽 모두 총수익 기준이라 직접 비교 가능합니다. <b>*</b> 표시는 기초지수가 벤치마크와 완전히 일치하지 않는 근사 비교입니다.
+  </div>
+</div>
+
+<div class="grid g2">
+  <div class="card">
+    <h2><span class="bar"></span>분배율 vs 총수익률 — "고배당 = 고수익"인가?</h2>
+    <div class="ch"><canvas id="c1"></canvas></div>
+    <div class="note" id="n1"></div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>상승참여율 vs 낙폭 방어폭 — 커버드콜의 본질적 거래</h2>
+    <div class="ch"><canvas id="c2"></canvas></div>
+    <div class="note">커버드콜은 <b>"상승참여율을 팔아서 낙폭 방어를 산다"</b>는 거래입니다. 오른쪽 위(참여율도 높고 방어도 되는 영역)에 있는 종목이 구조적으로 잘 설계된 상품입니다.
+      왼쪽 아래는 상승도 못 먹고 방어도 안 된, 가장 피해야 할 조합입니다.</div>
+  </div>
+</div>
+
+<div class="grid g2">
+  <div class="card">
+    <h2><span class="bar"></span>NAV 침식 — 상장 이후 주가 변화</h2>
+    <div class="ch"><canvas id="c3"></canvas></div>
+    <div class="note">막대가 왼쪽(음수)일수록 분배금이 원금을 갉아먹고 있다는 뜻입니다. 1세대와 0DTE 계열이 어디에 있는지 보세요.</div>
+  </div>
+  <div class="card">
+    <h2><span class="bar"></span>세대별 평균 지표</h2>
+    <div class="ch"><canvas id="c4"></canvas></div>
+    <div class="note">세대가 올라갈수록 분배율이 아니라 <b>원지수 대비 초과수익</b>이 개선되었는지 확인하는 차트입니다. 이것이 "발전했다"의 유일한 정직한 정의입니다.</div>
+  </div>
+</div>
+
+<div class="card">
+  <h2><span class="bar"></span>총수익률 우선 관점의 결론</h2>
+  <div id="insights"></div>
+</div>
+
+<div class="card">
+  <h2><span class="bar"></span>한국 투자자 세금 구조 — 같은 전략도 계좌에 따라 결과가 달라집니다</h2>
+  <div class="tw"><table style="min-width:800px">
+    <thead><tr><th class="l">구분</th><th class="l">미국 직상장 (QQQI·GPIQ·JEPQ)</th><th class="l">국내 상장 (TIGER·KODEX·ACE)</th></tr></thead>
+    <tbody>
+      <tr><td class="l nm">분배금</td><td class="l">미국 원천징수 15% (한국서 추가 없음)</td><td class="l">배당소득세 15.4%</td></tr>
+      <tr><td class="l nm">매매차익</td><td class="l">양도소득세 22% · <b class="pos">연 250만원 기본공제</b></td><td class="l"><b class="neg">배당소득세 15.4% (공제 없음)</b></td></tr>
+      <tr><td class="l nm">금융소득종합과세</td><td class="l">분배금만 합산 · 양도차익 제외</td><td class="l"><b class="neg">분배금 + 매매차익 전부 합산</b> → 2천만원 초과 시 최고 49.5%</td></tr>
+      <tr><td class="l nm">손익통산</td><td class="l">해외주식 내 통산 가능</td><td class="l">불가</td></tr>
+      <tr><td class="l nm">연금계좌(IRP·연금저축)</td><td class="l"><b class="neg">편입 불가</b></td><td class="l"><b class="pos">편입 가능 → 과세이연 + 인출 시 3.3~5.5%</b></td></tr>
+      <tr><td class="l nm">ISA</td><td class="l">불가</td><td class="l"><b class="pos">가능 (200~400만원 비과세)</b></td></tr>
+      <tr><td class="l nm">미국 상품의 ROC 효과</td><td class="l">NEOS 계열은 분배금 대부분이 ROC(자본반환) → 미국 과세 이연. 단 <b>한국 거주자에게는 이 혜택이 그대로 적용되지 않음</b>(원천징수 15%는 대체로 그대로 발생)</td><td class="l">해당 없음</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note">
+    <b>실무 판단 기준</b> — 분배금이 연 2,000만원 금융소득 한도에 근접하는 규모라면 국내 상장은 매매차익까지 합산되어 불리해집니다.
+    반대로 연금계좌·ISA 여력이 남아 있다면, 분배율 10~20%짜리 커버드콜을 <b>과세이연 계좌에 넣는 것이 세후 총수익률 측면에서 가장 강력한 레버</b>입니다.
+    커버드콜은 수익의 대부분이 매년 과세되는 분배금으로 나오므로, 세금 이연 효과가 다른 자산군보다 훨씬 큽니다.
+    ※ 세법은 변경될 수 있으며 개인 상황에 따라 달라집니다. 저는 세무사가 아니므로 실행 전 확인이 필요합니다.
+  </div>
+</div>
+
+<footer>
+  데이터: Yahoo Finance(미국, 배당재투자 조정) · 네이버 금융(한국) · 종목 메타데이터는 <code>universe.json</code>에서 관리<br>
+  이 대시보드는 정보 제공용이며 투자 권유가 아닙니다. 과거 성과는 미래 수익을 보장하지 않습니다.
+</footer>
+</div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const R = DATA.rows.filter(r=>r.status==='ok');
+const GEN = DATA.generations;
+const GC = {G1:'#e05252',G2:'#e8933a',G3:'#4a9eea',G4:'#a86fd6',BM:'#6b7787'};
+const GN = {G1:'1세대',G2:'2세대',G3:'3세대',G4:'4세대',BM:'벤치마크'};
+document.getElementById('gen').textContent = DATA.generated_at;
+
+const f=(v,d=1,s='%')=>v==null?'<span class="mini">–</span>':
+  `<span class="${v>0?'pos':v<0?'neg':''}">${v>0?'+':''}${v.toFixed(d)}${s}</span>`;
+const p=(v,d=2,s='%')=>v==null?'<span class="mini">–</span>':v.toFixed(d)+s;
+const avg=a=>{const c=a.filter(x=>x!=null);return c.length?c.reduce((x,y)=>x+y,0)/c.length:null};
+
+/* ---------- KPI ---------- */
+const strat = R.filter(r=>r.gen!=='BM');
+const kpis=[
+  ['수록 종목', R.length+'개', `미국 ${R.filter(r=>r.market==='US').length} · 한국 ${R.filter(r=>r.market==='KR').length}`],
+  ['평균 분배율 TTM', avg(strat.map(r=>r.ttm_yield)).toFixed(1)+'%', '커버드콜 전략상품 기준'],
+  ['평균 총수익 1년', avg(strat.map(r=>r.tr_1y)).toFixed(1)+'%', '분배금 포함'],
+  ['평균 초과수익 1년', avg(strat.map(r=>r.excess_1y)).toFixed(1)+'%p', '원지수 대비'],
+  ['평균 상승참여율', avg(strat.map(r=>r.capture_1y)).toFixed(0)+'%', '원지수 상승의 몇 %를 먹었나'],
+  ['평균 상장후 주가', avg(strat.map(r=>r.px_si)).toFixed(1)+'%', 'NAV 침식 대용치'],
+  ['평균 MDD 1년', avg(strat.map(r=>r.mdd_1y)).toFixed(1)+'%', '최대낙폭'],
+];
+document.getElementById('kpis').innerHTML = kpis.map(k=>
+  `<div class="kpi"><div class="l">${k[0]}</div><div class="v">${k[1]}</div><div class="n">${k[2]}</div></div>`).join('');
+
+/* ---------- 계보 ---------- */
+document.getElementById('genrow').innerHTML = ['G1','G2','G3','G4'].map(g=>{
+  const s=R.filter(r=>r.gen===g);
+  return `<div class="gen" style="--c:${GC[g]}">
+    <div class="t">${GEN[g].label}</div>
+    <div class="d">${GEN[g].thesis}</div>
+    <div class="m">
+      <div>종목 <b>${s.length}</b></div>
+      <div>분배율 <b>${avg(s.map(r=>r.ttm_yield))?.toFixed(1)??'–'}%</b></div>
+      <div>총수익 1Y <b>${avg(s.map(r=>r.tr_1y))?.toFixed(1)??'–'}%</b></div>
+      <div>초과수익 <b>${avg(s.map(r=>r.excess_1y))?.toFixed(1)??'–'}%p</b></div>
+      <div>참여율 <b>${avg(s.map(r=>r.capture_1y))?.toFixed(0)??'–'}%</b></div>
+    </div></div>`;
+}).join('');
+
+/* ---------- 테이블 ---------- */
+let st={mkt:'ALL',gen:'ALL',bm:'1',q:'',k:'score',asc:false};
+function view(){
+  return R.filter(r=>
+    (st.mkt==='ALL'||r.market===st.mkt) &&
+    (st.gen==='ALL'||r.gen===st.gen||r.gen==='BM') &&
+    (st.bm==='1'||r.gen!=='BM') &&
+    (!st.q||((r.name||'')+(r.ticker||'')+(r.issuer||'')).toLowerCase().includes(st.q))
+  ).sort((a,b)=>{
+    const x=a[st.k],y=b[st.k];
+    if(typeof x==='string'||typeof y==='string')
+      return (st.asc?1:-1)*String(x??'').localeCompare(String(y??''),'ko');
+    if(x==null)return 1; if(y==null)return -1;
+    return st.asc?x-y:y-x;
+  });
+}
+function scColor(s){ if(s==null)return 'background:#252b36;color:#6b7787';
+  const h=Math.round(s*1.2); return `background:hsl(${h} 55% 22%);color:hsl(${h} 75% 68%)`; }
+function render(){
+  document.querySelector('#tbl tbody').innerHTML = view().map(r=>`
+   <tr class="${r.gen==='BM'?'bm':''}">
+    <td class="l"><span class="nm">${r.name??''}</span><span class="tk">${r.market==='US'?r.ticker:r.ticker}</span>
+      <div class="mini">${r.issuer??''} · ${r.overwrite??'-'} · ${r.expiry??''}${r.bm_name?' · 비교 '+r.bm_name.slice(0,18):''}</div></td>
+    <td class="l"><span class="tag" style="background:${GC[r.gen]}">${GN[r.gen]}</span></td>
+    <td>${p(r.ttm_yield,2)}</td>
+    <td>${f(r.tr_1y)}</td>
+    <td>${f(r.excess_1y)}${r.bm_fit==='proxy'?'<span class="mini" title="기초지수가 벤치마크와 완전히 같지 않은 근사 비교">*</span>':''}</td>
+    <td>${r.capture_1y==null?'<span class="mini">–</span>':r.capture_1y.toFixed(0)+'%'}</td>
+    <td>${f(r.mdd_edge_1y)}</td>
+    <td>${f(r.tr_3y)}</td>
+    <td>${f(r.tr_si)}</td>
+    <td>${f(r.px_si)}</td>
+    <td>${f(r.mdd_1y)}</td>
+    <td>${f(r.mdd_si)}</td>
+    <td>${p(r.vol_1y,1)}</td>
+    <td>${r.calmar_1y==null?'<span class="mini">–</span>':r.calmar_1y.toFixed(2)}</td>
+    <td>${p(r.er,2)}</td>
+    <td><span class="sc" style="${scColor(r.score)}">${r.score??'–'}</span></td>
+   </tr>`).join('');
+  document.querySelectorAll('#tbl th').forEach(th=>{
+    th.innerHTML=th.innerHTML.replace(/<span class="ar">.*?<\/span>/,'');
+    if(th.dataset.k===st.k) th.innerHTML+=`<span class="ar">${st.asc?'▲':'▼'}</span>`;
+  });
+}
+document.querySelectorAll('#tbl th').forEach(th=>th.onclick=()=>{
+  const k=th.dataset.k; if(st.k===k)st.asc=!st.asc; else{st.k=k;st.asc=false;} render();});
+/* 필터 칩만 대상. 포트폴리오 계좌 칩(.acct)은 data-f 가 없어 자연히 제외된다. */
+document.querySelectorAll('.chip[data-f]').forEach(c=>c.onclick=()=>{
+  const g=c.dataset.f;
+  document.querySelectorAll(`.chip[data-f="${g}"]`).forEach(o=>o.classList.remove('on'));
+  if(g==='bm'){ st.bm = st.bm==='1'?'0':'1'; if(st.bm==='1')c.classList.add('on');
+    c.textContent = st.bm==='1'?'벤치마크 포함':'벤치마크 제외'; }
+  else { c.classList.add('on'); st[g]=c.dataset.v; }
+  render();});
+document.getElementById('q').oninput=e=>{st.q=e.target.value.toLowerCase();render();};
+render();
+
+/* ---------- 차트 ---------- */
+Chart.defaults.color='#9aa7b8'; Chart.defaults.borderColor='#2a3140';
+Chart.defaults.font.family="'Pretendard','Malgun Gothic',sans-serif";
+const sets=g=>({label:GN[g],backgroundColor:GC[g],borderColor:GC[g],pointRadius:6,pointHoverRadius:9});
+const scat=(id,xk,yk,xl,yl)=>new Chart(document.getElementById(id),{type:'scatter',
+  data:{datasets:['G1','G2','G3','G4','BM'].map(g=>({...sets(g),
+    data:R.filter(r=>r.gen===g&&r[xk]!=null&&r[yk]!=null)
+      .map(r=>({x:r[xk],y:r[yk],n:r.name,t:r.ticker,m:r.market}))}))},
+  options:{maintainAspectRatio:false,plugins:{
+    legend:{labels:{boxWidth:10,usePointStyle:true,pointStyle:'circle'}},
+    tooltip:{callbacks:{label:c=>`${c.raw.m==='KR'?'🇰🇷':'🇺🇸'} ${c.raw.n} · ${xl} ${c.raw.x.toFixed(1)}% / ${yl} ${c.raw.y.toFixed(1)}%`}}},
+   scales:{x:{title:{display:true,text:xl},grid:{color:'#222834'}},
+           y:{title:{display:true,text:yl},grid:{color:'#222834'}}}}});
+scat('c1','ttm_yield','tr_1y','분배율 TTM (%)','총수익률 1년 (%)');
+scat('c2','capture_1y','mdd_edge_1y','상승참여율 (%)','낙폭 방어폭 (%p, 원지수 대비)');
+
+/* 상관계수 */
+(function(){
+  const d=R.filter(r=>r.gen!=='BM'&&r.ttm_yield!=null&&r.tr_1y!=null);
+  const mx=avg(d.map(r=>r.ttm_yield)), my=avg(d.map(r=>r.tr_1y));
+  let n=0,a=0,b=0; d.forEach(r=>{const u=r.ttm_yield-mx,v=r.tr_1y-my;n+=u*v;a+=u*u;b+=v*v;});
+  const cc=n/Math.sqrt(a*b);
+  document.getElementById('n1').innerHTML =
+    `분배율과 총수익률의 상관계수 <b style="color:${cc<0.2?'var(--neg)':'var(--pos)'}">r = ${cc.toFixed(2)}</b> (n=${d.length}).
+     ${cc<0.2?'상관이 거의 없거나 <b>음(-)</b>입니다. 즉 <b>분배율을 보고 종목을 고르면 총수익률은 오히려 손해</b>일 수 있다는 뜻입니다.'
+              :'이 구간에서는 분배율이 높은 상품이 총수익률도 높았습니다. 단, 특정 시장국면(고변동성 횡보장)의 결과일 수 있으니 기간을 바꿔가며 확인하세요.'}`;
+})();
+
+/* NAV 침식 막대 */
+(function(){
+  const d=R.filter(r=>r.px_si!=null&&r.gen!=='BM').sort((a,b)=>a.px_si-b.px_si).slice(0,22);
+  new Chart(document.getElementById('c3'),{type:'bar',
+   data:{labels:d.map(r=>r.market==='KR'?r.name.slice(0,16):r.ticker),
+    datasets:[{data:d.map(r=>r.px_si),backgroundColor:d.map(r=>GC[r.gen])}]},
+   options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},
+     tooltip:{callbacks:{label:c=>`상장 이후 주가 ${c.raw>0?'+':''}${c.raw.toFixed(1)}%`}}},
+    scales:{x:{grid:{color:'#222834'},title:{display:true,text:'상장 이후 주가 변화 (%)'}},
+            y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+})();
+
+/* 세대별 평균 */
+(function(){
+  const gs=['G1','G2','G3','G4'];
+  new Chart(document.getElementById('c4'),{type:'bar',
+   data:{labels:gs.map(g=>GN[g]),datasets:[
+    {label:'분배율 TTM',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.ttm_yield))),backgroundColor:'#e8933a'},
+    {label:'총수익 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.tr_1y))),backgroundColor:'#3fb950'},
+    {label:'초과수익 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.excess_1y))),backgroundColor:'#4a9eea'},
+    {label:'MDD 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.mdd_1y))),backgroundColor:'#f4574f'}]},
+   options:{maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},
+    scales:{y:{grid:{color:'#222834'},title:{display:true,text:'%'}},x:{grid:{display:false}}}}});
+})();
+
+/* ---------- 인사이트 (데이터에서 자동 생성) ---------- */
+(function(){
+  const s=R.filter(r=>r.gen!=='BM'&&r.tr_1y!=null);
+  const withBM=s.filter(r=>r.excess_1y!=null);
+  const top=[...s].sort((a,b)=>b.score-a.score).slice(0,5);
+  const bestEx=[...withBM].filter(r=>r.excess_1y>0).sort((a,b)=>b.excess_1y-a.excess_1y).slice(0,5);
+  const worstEx=[...withBM].sort((a,b)=>a.excess_1y-b.excess_1y).slice(0,3);
+  const worstNav=[...s].filter(r=>r.px_si!=null).sort((a,b)=>a.px_si-b.px_si).slice(0,3);
+  const hiY=[...s].filter(r=>r.ttm_yield!=null).sort((a,b)=>b.ttm_yield-a.ttm_yield).slice(0,4);
+  const guard=[...withBM].filter(r=>r.mdd_edge_1y!=null).sort((a,b)=>b.mdd_edge_1y-a.mdd_edge_1y).slice(0,3);
+  const win=withBM.filter(r=>r.excess_1y>0).length;
+  const nm=r=>`<b>${r.name}</b>${r.market==='US'?' ('+r.ticker+')':''}`;
+  const bm=r=>`<span class="mini">vs ${r.bm_name??'-'}${r.bm_fit==='proxy'?' <span title="기초지수가 달라 근사 비교">*</span>':''}</span>`;
+  const sg=(v,d=1,u='%p')=>v==null?'–':(v>0?'+':'')+v.toFixed(d)+u;
+
+  // 세대별 평균 초과수익
+  const gline=['G1','G2','G3','G4'].map(g=>{
+    const d=withBM.filter(r=>r.gen===g);
+    return d.length?`${GN[g]} <b style="color:${GC[g]}">${avg(d.map(r=>r.excess_1y)).toFixed(1)}%p</b> (참여율 ${avg(d.map(r=>r.capture_1y)).toFixed(0)}%, n=${d.length})`:null;
+  }).filter(Boolean).join(' &nbsp;·&nbsp; ');
+
+  const html=[
+   {c:'warn',h:'① 먼저 인정해야 할 사실 — 커버드콜은 원지수를 이기지 못했습니다',
+    b:`벤치마크가 매칭된 <b>${withBM.length}개</b> 커버드콜 중 최근 1년 원지수를 이긴 종목은 <b>${win}개(${(win/withBM.length*100).toFixed(0)}%)</b>뿐입니다.
+       평균 초과수익은 <b class="neg">${avg(withBM.map(r=>r.excess_1y)).toFixed(1)}%p</b>, 평균 상승참여율은 <b>${avg(withBM.map(r=>r.capture_1y)).toFixed(0)}%</b>입니다.
+       구조상 당연한 결과입니다 — 최근 1년은 상승장이었고, 커버드콜은 상승을 팔아 현금을 만드는 전략이기 때문입니다.
+       <b>총수익률이 목표라면 커버드콜 비중 자체를 최소화하는 것이 첫 번째 결론</b>입니다.`},
+   {c:'',h:'② 세대는 정말 발전했는가 — 세대별 평균 초과수익',
+    b:`${gline}<br><span class="mini">분배율은 세대가 올라가며 계속 높아졌지만, 정작 중요한 초과수익과 상승참여율이 함께 개선됐는지가 "발전"의 유일한 증거입니다.</span>`},
+   {c:'good',h:'③ 그럼에도 원지수를 이긴 종목 — 초과수익 상위',
+    b:(bestEx.length?bestEx.map(r=>`${nm(r)} ${bm(r)} — 초과수익 <b class="pos">${sg(r.excess_1y)}</b> · 참여율 ${r.capture_1y?.toFixed(0)??'–'}% · 분배율 ${r.ttm_yield?.toFixed(1)??'–'}% · 낙폭방어 ${sg(r.mdd_edge_1y)}`).join('<br>')
+        :'<b>이 기간에는 원지수를 이긴 커버드콜이 한 종목도 없습니다.</b>')
+      +`<br><span class="mini">이들의 공통점은 <b>매도 비중이 낮거나(부분·OTM·데일리 소액) 동적으로 조절</b>된다는 점입니다. 분배율이 가장 높은 종목은 여기에 하나도 없습니다.
+        <b>*</b> 표시는 기초지수가 벤치마크와 달라(예: AI밸류체인 vs 나스닥100) 초과수익이 전략이 아니라 <b>지수 차이에서 나온 것</b>일 수 있습니다 — 참여율이 120%를 넘으면 대부분 이 경우입니다.</span>`},
+   {c:'warn',h:'④ 가장 크게 뒤처진 종목 — 무엇을 팔았는지 보세요',
+    b:worstEx.map(r=>`${nm(r)} ${bm(r)} — 초과수익 <b class="neg">${r.excess_1y.toFixed(1)}%p</b> · 참여율 <b>${r.capture_1y?.toFixed(0)??'–'}%</b> · 분배율 ${r.ttm_yield?.toFixed(1)??'–'}%`).join('<br>')
+      +`<br><span class="mini">참여율이 낮을수록 원지수 상승을 옵션 매수자에게 넘긴 것입니다. 강세장에서 이 손실은 분배금으로 회수되지 않습니다.</span>`},
+   {c:'good',h:'⑤ 커버드콜이 실제로 값어치를 한 지점 — 낙폭 방어',
+    b:guard.map(r=>`${nm(r)} ${bm(r)} — 원지수보다 <b class="pos">${r.mdd_edge_1y.toFixed(1)}%p</b> 덜 빠짐 (MDD ${r.mdd_1y?.toFixed(1)}% vs 원지수 ${(r.mdd_1y-r.mdd_edge_1y).toFixed(1)}%)`).join('<br>')
+      +`<br><span class="mini">이것이 커버드콜을 보유할 유일하게 정직한 이유입니다. 수익이 아니라 <b>변동성 관리</b>가 목적일 때 값어치가 있습니다.</span>`},
+   {c:'warn',h:'⑥ 고분배율의 청구서 — 분배금이 원금이었던 종목',
+    b:worstNav.map(r=>`${nm(r)} — 분배율 ${r.ttm_yield?.toFixed(1)??'–'}%인데 상장 이후 주가 <b class="neg">${r.px_si.toFixed(1)}%</b>`).join('<br>')
+      +'<br>'+hiY.map(r=>`분배율 최상위: ${nm(r)} <b>${r.ttm_yield.toFixed(1)}%</b> → 실제 총수익 ${r.tr_1y.toFixed(1)}% (초과수익 ${sg(r.excess_1y)})`).join('<br>')},
+   {c:'good',h:'⑦ 종합점수 상위 — 초과수익 40% 가중 기준',
+    b:top.map((r,i)=>`${i+1}. ${nm(r)} · 점수 <b>${r.score}</b> · 초과수익 ${sg(r.excess_1y)} · 참여율 ${r.capture_1y?.toFixed(0)??'–'}% · 분배율 ${r.ttm_yield?.toFixed(1)??'–'}% · MDD ${r.mdd_1y?.toFixed(1)??'–'}%`).join('<br>')},
+  ];
+  document.getElementById('insights').innerHTML =
+    html.map(i=>`<div class="ins ${i.c}"><div class="h">${i.h}</div><div class="b">${i.b}</div></div>`).join('')
+    + `<div class="ins"><div class="h">⑧ 구조가 알려주는 원칙</div><div class="b">
+      커버드콜의 총수익률은 <b>매도 강도(overwrite ratio)에 반비례</b>합니다. 100% ATM 매도는 상승을 전부 포기하고,
+      부분·OTM 매도는 상승의 일부를 남깁니다. 분배율은 매도 강도의 함수이므로 <b>분배율이 높다 = 상승참여를 더 많이 팔았다</b>는 뜻입니다.
+      위 데이터에서 분배율 최상위 종목들이 초과수익 상위에 한 종목도 없는 이유가 이것입니다.<br>
+      따라서 총수익률이 목표라면 선택 순서는 ⓐ <b>커버드콜 비중 자체를 줄이고 원지수를 코어로</b> → ⓑ 굳이 담는다면 매도 비중이 낮거나 동적으로 조절되는 상품
+      → ⓒ 세제 효율(Section 1256·ROC 또는 연금계좌·ISA) → ⓓ 낮은 보수 순서이며, <b>분배율은 선택 기준이 아니라 결과 지표</b>입니다.<br>
+      <b>반론도 분명히 있습니다.</b> 은퇴 후 현금흐름이 필요한 투자자에게는 자산을 팔지 않고 나오는 현금 자체가 효용이고, 횡보·하락장에서는 커버드콜이 원지수를 앞섭니다.
+      위 숫자는 <b>최근 1년이라는 특정 국면</b>의 결과이며, 상승장에서 커버드콜이 불리하게 보이는 것은 전략의 실패가 아니라 설계대로 작동한 결과입니다.
+      기간 필터를 3년·상장후로 바꿔가며 다른 국면에서의 모습도 함께 확인하시길 권합니다.
+      </div></div>`;
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   내 포트폴리오
+   보유 내역은 이 브라우저(localStorage)에만 저장한다. 레포가 public 이므로
+   보유 종목·금액이 커밋되면 그대로 공개된다. 백업·기기 이동은 JSON 파일로.
+   ══════════════════════════════════════════════════════════════ */
+(function(){
+const PKEY='ccl_portfolio_v1';
+const AX  = DATA.axis || [];
+const FX  = (DATA.fx && DATA.fx.usdkrw) || 1400;
+const BYID= Object.fromEntries(R.map(r=>[r.id,r]));
+const OPTS= R.slice().sort((a,b)=>
+  (a.market===b.market? String(a.name).localeCompare(String(b.name),'ko') : a.market==='US'?-1:1));
+
+/* ---------- 계좌 유형별 과세 ----------
+   국내상장 ETF: 분배금·매매차익 모두 배당소득 15.4%
+   해외상장 ETF: 분배금 15% 원천징수 / 양도차익 22%(연 250만원 기본공제)
+   연금계좌   : 과세이연, 인출 시 연금소득세 3.3~5.5% (국내상장만 편입 가능)
+   ISA        : 순이익 200만원까지 비과세, 초과분 9.9% 분리과세 (국내상장만) */
+const ACCT={
+  general:{label:'일반계좌', divKR:.154, divUS:.15, gainKR:.154, gainUS:.22,
+    usGainDeduct:2500000, krOnly:false,
+    note:'분배금은 원천징수 후 지급됩니다. 국내상장 ETF는 매매차익도 배당소득으로 과세되어 금융소득종합과세(연 2,000만원 초과) 대상에 합산됩니다. 미국 직상장은 양도차익 22%, 연 250만원 기본공제가 적용되며 종합과세에 합산되지 않습니다.'},
+  pension:{label:'연금계좌', divKR:0, divUS:null, gainKR:0, gainUS:null,
+    usGainDeduct:0, krOnly:true,
+    note:'납입 기간 중에는 과세되지 않고 인출 시 연금소득세 3.3~5.5%가 적용됩니다. 아래 세후 금액은 이연 상태(당장 0%) 기준이므로 인출 시점의 세금은 별도로 감안하세요. 미국 직상장 종목은 편입할 수 없습니다.'},
+  isa:{label:'ISA', divKR:'pool', divUS:null, gainKR:'pool', gainUS:null,
+    exempt:2000000, poolRate:.099, krOnly:true,
+    note:'분배금과 매매차익을 합산한 순이익 200만원(서민·농어민형 400만원)까지 비과세, 초과분은 9.9% 분리과세입니다. 아래 계산은 일반형 200만원 기준이며 미국 직상장 종목은 편입할 수 없습니다.'}
+};
+
+/* ---------- 저장소 (실패해도 세션 메모리로 동작) ---------- */
+let mem=null;
+function load(){
+  try{ const s=localStorage.getItem(PKEY); if(s) return JSON.parse(s); }catch(e){}
+  return mem;
+}
+function save(){
+  mem=PF;
+  try{ localStorage.setItem(PKEY, JSON.stringify(PF)); }catch(e){}
+}
+let PF = load() || {acct:'general', items:[]};
+if(!Array.isArray(PF.items)) PF.items=[];
+if(!ACCT[PF.acct]) PF.acct='general';
+
+/* ---------- 숫자 포맷 ---------- */
+const won=v=>v==null?'–':Math.round(v).toLocaleString('ko-KR')+'원';
+const won0=v=>v==null?'–':Math.round(v).toLocaleString('ko-KR');
+const sgn=(v,fmt)=>{const c=v>0?'pos':v<0?'neg':'';return `<span class="${c}">${v>0?'+':''}${fmt(v)}</span>`;};
+const num=v=>v==null||isNaN(v)?0:v;
+
+/* ---------- 계산 ---------- */
+function calc(){
+  const A=ACCT[PF.acct];
+  const H=PF.items.map((it,idx)=>{
+    const r=BYID[it.id]; if(!r) return null;
+    const fx = r.ccy==='USD' ? FX : 1;
+    const qty=num(it.qty), avg=num(it.avg);
+    const val = qty*num(r.price)*fx;          // 평가금액(원)
+    const cost= qty*avg*fx;                    // 매입금액(원)
+    const dps = r.sched ? r.sched.annual
+              : (r.ttm_yield!=null ? num(r.price)*r.ttm_yield/100 : 0);
+    return {idx, it, r, fx, qty, avg, val, cost, pl:val-cost,
+            annDiv: dps*qty*fx, us:r.market==='US'};
+  }).filter(Boolean);
+
+  const totVal =H.reduce((s,h)=>s+h.val,0);
+  const totCost=H.reduce((s,h)=>s+h.cost,0);
+  const totDiv =H.reduce((s,h)=>s+h.annDiv,0);
+  const totPL  =totVal-totCost;
+
+  /* 세후 — 분배금은 실제 수령분, 평가손익은 '지금 전량 매도 가정'의 참고치 */
+  let divTax=0, gainTax=0;
+  if(PF.acct==='general'){
+    H.forEach(h=>{ divTax += h.annDiv*(h.us?A.divUS:A.divKR); });
+    const usGain=H.filter(h=>h.us).reduce((s,h)=>s+h.pl,0);
+    const krGain=H.filter(h=>!h.us).reduce((s,h)=>s+h.pl,0);
+    gainTax = Math.max(0,usGain-A.usGainDeduct)*A.gainUS + Math.max(0,krGain)*A.gainKR;
+  }else if(PF.acct==='isa'){
+    const net=Math.max(0,totDiv+Math.max(0,totPL)-A.exempt)*A.poolRate;
+    const base=totDiv+Math.max(0,totPL);
+    divTax = base>0 ? net*(totDiv/base) : 0;
+    gainTax= net-divTax;
+  } /* pension: 이연 → 0 */
+
+  return {A,H,totVal,totCost,totDiv,totPL,divTax,gainTax};
+}
+
+/* ---------- 예상 배당 캘린더 ---------- */
+function calendar(C){
+  const now=new Date();
+  const labels=[], keys=[];
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(), now.getMonth()+i, 1);
+    labels.push(`${d.getFullYear()%100}년 ${d.getMonth()+1}월`);
+    keys.push(String(d.getMonth()+1));
+  }
+  const gross=keys.map(()=>0);
+  C.H.forEach(h=>{
+    const w=(h.r.sched&&h.r.sched.months)||null;
+    keys.forEach((k,i)=>{ gross[i] += h.annDiv * (w? num(w[k]) : 1/12); });
+  });
+  const effTax = C.totDiv>0 ? C.divTax/C.totDiv : 0;
+  return {labels, gross, net:gross.map(v=>v*(1-effTax)), effTax};
+}
+
+/* ---------- 렌더 ---------- */
+let CH1=null, CH2=null;
+function renderPF(){
+  const C=calc();
+  document.querySelectorAll('.chip.acct').forEach(c=>
+    c.classList.toggle('on', c.dataset.a===PF.acct));
+
+  const tb=document.querySelector('#pftbl tbody');
+  const empty=document.getElementById('pfempty');
+  document.getElementById('pftbl').parentElement.style.display = C.H.length?'':'none';
+  empty.style.display = C.H.length?'none':'';
+  document.getElementById('pfcharts').style.display = C.H.length?'':'none';
+
+  const sel=h=>`<select data-i="${h.idx}" data-f="id">`+
+    OPTS.map(o=>`<option value="${o.id}" ${o.id===h.it.id?'selected':''}>${
+      (o.market==='US'?'🇺🇸 ':'🇰🇷 ')+(o.name||'').slice(0,30)+(o.market==='US'?' ('+o.ticker+')':'')}</option>`).join('')+
+    '</select>';
+
+  tb.innerHTML = C.H.map(h=>{
+    const wNow = C.totVal? h.val/C.totVal*100 : 0;
+    const tgt  = h.it.target==null? null : num(h.it.target);
+    const adj  = tgt==null? null : C.totVal*tgt/100 - h.val;
+    const cur  = h.r.ccy==='USD'?'$':'₩';
+    const bad  = C.A.krOnly && h.us;
+    return `<tr>
+      <td class="l" style="min-width:260px">${sel(h)}
+        <div class="hint">${h.r.gen==='BM'?'벤치마크(원지수)':GN[h.r.gen]} · 분배 ${h.r.sched?h.r.sched.freq:'–'} · 보수 ${h.r.er??'–'}%${
+          bad?' · <span class="neg">이 계좌에 편입 불가</span>':''}</div></td>
+      <td style="width:100px"><input type="number" step="any" min="0" data-i="${h.idx}" data-f="qty" value="${h.qty||''}"></td>
+      <td style="width:110px"><input type="number" step="any" min="0" data-i="${h.idx}" data-f="avg" value="${h.avg||''}">
+        <div class="hint">${cur} 기준</div></td>
+      <td>${cur}${h.r.price?.toLocaleString('ko-KR')??'–'}</td>
+      <td><b>${won0(h.val)}</b></td>
+      <td>${sgn(h.pl,won0)}</td>
+      <td>${h.cost>0? sgn(h.pl/h.cost*100,v=>v.toFixed(2)+'%') : '–'}</td>
+      <td>${won0(h.annDiv)}<div class="hint">${h.cost>0?(h.annDiv/h.cost*100).toFixed(1)+'% (평단 대비)':''}</div></td>
+      <td>${wNow.toFixed(1)}%<div class="bar-mini"><i style="width:${Math.min(100,wNow)}%"></i></div></td>
+      <td style="width:90px"><input type="number" step="any" min="0" max="100" data-i="${h.idx}" data-f="target" value="${h.it.target??''}" placeholder="–"></td>
+      <td>${adj==null?'<span class="mini">–</span>':sgn(adj,won0)}</td>
+      <td style="width:34px"><button class="btn dgr" data-del="${h.idx}" style="padding:4px 9px">✕</button></td>
+    </tr>`;
+  }).join('');
+
+  /* KPI */
+  const roi = C.totCost>0 ? C.totPL/C.totCost*100 : null;
+  const yieldOnCost = C.totCost>0 ? C.totDiv/C.totCost*100 : null;
+  const netDiv = C.totDiv - C.divTax;
+  document.getElementById('pfkpi').innerHTML = [
+    ['총 평가금액', won0(C.totVal)+'원', `매입 ${won0(C.totCost)}원`],
+    ['평가손익', (C.totPL>=0?'+':'')+won0(C.totPL)+'원',
+      roi==null?'–':`수익률 ${(roi>0?'+':'')+roi.toFixed(2)}%`],
+    ['연 예상 분배금', won0(C.totDiv)+'원',
+      yieldOnCost==null?'–':`평단 대비 ${yieldOnCost.toFixed(2)}%`],
+    ['세후 연 분배금', won0(netDiv)+'원',
+      C.totDiv>0?`${C.A.label} · 실효 ${(C.divTax/C.totDiv*100).toFixed(1)}%`:C.A.label],
+    ['월 평균 수령액', won0(netDiv/12)+'원', '세후 기준'],
+    ['평가익 과세 추정', won0(C.gainTax)+'원', '지금 전량 매도 가정'],
+  ].map(k=>{
+    const cls = k[0]==='평가손익' ? (C.totPL>0?'pos':C.totPL<0?'neg':'') : '';
+    return `<div class="kpi"><div class="l">${k[0]}</div><div class="v ${cls}">${k[1]}</div><div class="n">${k[2]}</div></div>`;
+  }).join('');
+
+  const tgtSum = C.H.reduce((s,h)=>s+(h.it.target==null?0:num(h.it.target)),0);
+  document.getElementById('pfnote').innerHTML =
+    `<b>${C.A.label}</b> — ${C.A.note}<br>
+     환율 <b>${FX.toLocaleString('ko-KR')}원/$</b> 기준으로 미국 상장분을 원화 환산했습니다(갱신: ${DATA.generated_at}).
+     평균단가는 각 종목의 <b>거래 통화</b>로 입력하세요(미국 $, 한국 ₩).
+     ${tgtSum>0?`목표비중 합계 <b>${tgtSum.toFixed(0)}%</b>${Math.abs(tgtSum-100)>0.5?' <span class="neg">— 100%가 아닙니다</span>':''}.`:''}
+     <br>보유 내역은 이 브라우저에만 저장되며 어떤 서버로도 전송되지 않습니다. 다른 기기에서 쓰려면 JSON으로 내보내 옮기세요.`;
+
+  drawCharts(C);
+}
+
+/* ---------- 차트 ---------- */
+function drawCharts(C){
+  if(!C.H.length) return;
+  const PAL=['#4a9eea','#e8933a','#3fb950','#a86fd6','#e05252','#48c9c9','#d4b942','#8b9dc3','#e07ab0','#7ad4a0'];
+
+  /* 1) 보유 종목 총수익 추이 + 포트폴리오 합성 곡선 */
+  const withAx = C.H.filter(h=>Array.isArray(h.r.ax));
+  if(withAx.length && AX.length){
+    // 모든 보유 종목이 데이터를 가진 시점부터 그린다. 그래야 같은 출발선에서 비교된다.
+    const first = h=>h.r.ax.findIndex(v=>v!=null);
+    const s0 = Math.max(...withAx.map(first));
+    const labels=AX.slice(s0);
+    const ds = withAx.map((h,i)=>{
+      const base=h.r.ax[s0];
+      return {label:(h.r.market==='US'?h.r.ticker:(h.r.name||'').slice(0,14)),
+        data:h.r.ax.slice(s0).map(v=>v==null?null:+(v/base*100).toFixed(2)),
+        borderColor:PAL[i%PAL.length], backgroundColor:PAL[i%PAL.length],
+        borderWidth:1.6, pointRadius:0, tension:.15};
+    });
+    // 합성: 각 종목의 현재 평가금액을 총수익지수 비율로 과거에 투영해 합산한다.
+    const comp=labels.map((_,j)=>{
+      let v=0, ok=true;
+      withAx.forEach(h=>{
+        const last=h.r.ax[h.r.ax.length-1], cur=h.r.ax[s0+j];
+        if(cur==null||!last){ok=false;return;}
+        v += h.val*cur/last;
+      });
+      return ok? v : null;
+    });
+    const cb=comp.find(v=>v!=null);
+    ds.push({label:'내 포트폴리오', data:comp.map(v=>v==null?null:+(v/cb*100).toFixed(2)),
+      borderColor:'#fff', backgroundColor:'#fff', borderWidth:2.8, pointRadius:0, tension:.15});
+
+    if(CH1) CH1.destroy();
+    CH1=new Chart(document.getElementById('cp1'),{type:'line',
+      data:{labels,datasets:ds},
+      options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{labels:{boxWidth:10,usePointStyle:true,pointStyle:'line'}},
+          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y==null?'–':c.parsed.y.toFixed(1)}`}}},
+        scales:{x:{ticks:{maxTicksLimit:9},grid:{color:'#222834'}},
+                y:{title:{display:true,text:'총수익 지수 (시작=100)'},grid:{color:'#222834'}}}}});
+    const cl=comp[comp.length-1], pr=cl!=null&&cb? (cl/cb-1)*100 : null;
+    document.getElementById('np1').innerHTML =
+      `분배금을 재투자했다고 가정한 <b>총수익 기준</b> 곡선입니다. 시작 시점은 보유 종목 중 가장 늦게 상장한 종목(${labels[0]})에 맞췄습니다.
+       흰 선이 현재 보유 비중으로 합성한 포트폴리오이며, 이 구간 수익률은 <b>${pr==null?'–':(pr>0?'+':'')+pr.toFixed(1)+'%'}</b>입니다.
+       과거 비중이 지금과 같았다고 가정한 계산이라 실제 매매 이력과는 다릅니다. 환율은 현재값으로 고정했습니다.`;
+  }
+
+  /* 2) 향후 12개월 예상 분배금 */
+  const cal=calendar(C);
+  if(CH2) CH2.destroy();
+  CH2=new Chart(document.getElementById('cp2'),{type:'bar',
+    data:{labels:cal.labels,datasets:[
+      {label:'세전',backgroundColor:'#2f4a63',data:cal.gross.map(v=>Math.round(v))},
+      {label:'세후',backgroundColor:'#4a9eea',data:cal.net.map(v=>Math.round(v))}]},
+    options:{maintainAspectRatio:false,
+      plugins:{legend:{labels:{boxWidth:10}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label} ${won(c.parsed.y)}`}}},
+      scales:{x:{grid:{display:false}},
+              y:{title:{display:true,text:'원'},grid:{color:'#222834'},
+                 ticks:{callback:v=>(v/10000).toFixed(0)+'만'}}}}});
+  document.getElementById('np2').innerHTML =
+    `최근 12개월 실제 분배 실적(TTM)을 향후 12개월의 중립적 기준선으로 삼고, 종목별 지급 월 패턴에 맞춰 배분했습니다.
+     커버드콜의 분배금은 옵션 프리미엄에 연동돼 변동성이 클수록 늘고 잔잔한 장에서는 줄어듭니다. <b>확정 금액이 아니라 기준선</b>으로 보세요.
+     국내 ETF는 네이버가 회차별 분배 이력을 제공하지 않아 지급 월에 균등 배분한 근사치이며, 회차별 편차는 반영되지 않았습니다.
+     세후는 <b>${ACCT[PF.acct].label}</b> 기준 실효세율 ${(cal.effTax*100).toFixed(1)}%를 적용했습니다.`;
+}
+
+/* ---------- 이벤트 ---------- */
+document.querySelector('#pftbl tbody').addEventListener('change',e=>{
+  const t=e.target, i=+t.dataset.i, fld=t.dataset.f;
+  if(isNaN(i)||!fld) return;
+  PF.items[i][fld] = fld==='id' ? t.value : (t.value===''? null : +t.value);
+  save(); renderPF();
+});
+document.querySelector('#pftbl tbody').addEventListener('click',e=>{
+  const d=e.target.dataset.del;
+  if(d==null) return;
+  PF.items.splice(+d,1); save(); renderPF();
+});
+document.querySelectorAll('.chip.acct').forEach(c=>c.onclick=()=>{
+  PF.acct=c.dataset.a; save(); renderPF();
+});
+document.getElementById('pfadd').onclick=()=>{
+  const first = OPTS.find(o=>o.gen!=='BM') || OPTS[0];
+  PF.items.push({id:first.id, qty:null, avg:null, target:null});
+  save(); renderPF();
+};
+document.getElementById('pfclr').onclick=()=>{
+  if(!PF.items.length) return;
+  if(confirm('보유 내역을 모두 삭제할까요? 되돌릴 수 없습니다.')){
+    PF.items=[]; save(); renderPF();
+  }
+};
+document.getElementById('pfexp').onclick=()=>{
+  const blob=new Blob([JSON.stringify({...PF,exported_at:new Date().toISOString()},null,2)],
+    {type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`portfolio-${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+};
+document.getElementById('pfimp').onclick=()=>document.getElementById('pffile').click();
+document.getElementById('pffile').onchange=e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const rd=new FileReader();
+  rd.onload=()=>{
+    try{
+      const o=JSON.parse(rd.result);
+      if(!Array.isArray(o.items)) throw new Error('items 배열이 없습니다');
+      PF={acct: ACCT[o.acct]?o.acct:'general',
+          items:o.items.filter(x=>x&&BYID[x.id]).map(x=>({
+            id:x.id, qty:num(x.qty)||null, avg:num(x.avg)||null,
+            target:x.target==null?null:num(x.target)}))};
+      save(); renderPF();
+    }catch(err){ alert('불러오기 실패: '+err.message); }
+    e.target.value='';
+  };
+  rd.readAsText(f);
+};
+
+renderPF();
+})();
+
+</script>
+</body>
+</html>

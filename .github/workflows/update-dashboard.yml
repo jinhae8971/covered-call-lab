@@ -1,0 +1,136 @@
+name: 커버드콜 대시보드 주간 갱신
+
+on:
+  schedule:
+    # 매주 토요일 08:00 KST = 금요일 23:00 UTC (KST = UTC+9)
+    - cron: "0 23 * * 5"
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "갱신 범위"
+        required: false
+        default: "all"
+        type: choice
+        options: [all, us, kr]
+
+permissions:
+  contents: write   # 갱신된 dashboard/index/metrics 를 되커밋
+  pages: write      # GitHub Pages 배포
+  id-token: write   # deploy-pages OIDC
+
+# 같은 워크플로우가 겹쳐 돌면 push 충돌이 나므로 직렬화한다.
+concurrency:
+  group: dashboard-update
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 의존성 설치
+        run: |
+          python -m pip install --upgrade pip
+          # requirements.txt 는 현재 비어 있습니다(표준 라이브러리만 사용).
+          if [ -s requirements.txt ] && grep -qv '^\s*#' requirements.txt; then
+            pip install -r requirements.txt
+          fi
+
+      # 입력값을 셸에 직접 보간하지 않고 env 로 받은 뒤 화이트리스트 검증한다.
+      # (스크립트 인젝션 방지)
+      - name: 범위 인자 결정
+        id: scope
+        env:
+          RAW_SCOPE: ${{ github.event.inputs.scope }}
+        run: |
+          case "${RAW_SCOPE:-all}" in
+            us) FLAG="--only-us" ;;
+            kr) FLAG="--only-kr" ;;
+            all|"") FLAG="" ;;
+            *) echo "허용되지 않은 scope 값" >&2; exit 1 ;;
+          esac
+          echo "flag=$FLAG" >> "$GITHUB_OUTPUT"
+
+      - name: 데이터 수집 및 대시보드 빌드
+        id: build
+        continue-on-error: true
+        run: python build.py ${{ steps.scope.outputs.flag }}
+
+      # 외부 API 가 막히면 build.py 는 종목별로 error 를 기록한 채 계속 진행한다.
+      # 그 결과를 그대로 커밋하면 정상 데이터가 빈 데이터로 덮인다. 임계치로 방어한다.
+      - name: 데이터 품질 게이트
+        id: gate
+        run: |
+          python - <<'PY'
+          import json, os, sys
+          try:
+              m = json.load(open("data/metrics.json", encoding="utf-8"))
+          except Exception as e:
+              print(f"metrics.json 을 읽을 수 없습니다: {e}")
+              sys.exit(1)
+          rows = m.get("rows", [])
+          ok = sum(1 for r in rows if r.get("status") == "ok")
+          print(f"수집 성공 {ok}/{len(rows)}")
+          for e in m.get("errors", [])[:20]:
+              print("  실패:", e)
+          # 전체의 70% 미만만 성공했다면 신뢰할 수 없는 스냅샷으로 간주한다.
+          if len(rows) == 0 or ok < len(rows) * 0.7:
+              print("::error::수집 성공률이 임계치(70%) 미만이라 갱신을 중단합니다.")
+              sys.exit(2)
+          PY
+
+      - name: 품질 게이트 실패 시 이전 스냅샷 복원
+        if: failure() && steps.gate.outcome == 'failure'
+        run: git checkout -- . || true
+
+      - name: 갱신분 커밋
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A index.html dashboard.html data/metrics.json
+          if git diff --cached --quiet; then
+            echo "변경 없음 — 커밋 생략"
+            exit 0
+          fi
+          git commit -m "chore: 대시보드 자동 갱신 $(date -u +'%Y-%m-%d %H:%MZ')"
+          # 스케줄 실행이 겹치거나 수동 커밋과 충돌할 수 있어 재시도한다.
+          for i in 1 2 3; do
+            if git push; then echo "push 성공 (시도 $i)"; exit 0; fi
+            echo "push 실패 — rebase 후 재시도 ($i/3)"
+            git pull --rebase --autostash || true
+            sleep $((i * 5))
+          done
+          echo "::error::3회 시도 후에도 push 에 실패했습니다."
+          exit 1
+
+      # 원시 캐시(수십 MB)까지 Pages 로 올리지 않도록 배포물만 따로 모은다.
+      - name: Pages 배포물 구성
+        run: |
+          mkdir -p _site/data
+          cp index.html _site/index.html
+          cp data/metrics.json _site/data/metrics.json
+          touch _site/.nojekyll
+          du -sh _site
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

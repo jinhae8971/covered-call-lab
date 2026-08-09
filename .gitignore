@@ -1,0 +1,25 @@
+# 자격증명 / 로컬 설정 — 절대 커밋 금지
+config.json
+.env
+*.env
+*.pem
+*.key
+secrets*.json
+# 대시보드에서 내보낸 보유 내역 — public 레포이므로 절대 커밋 금지
+portfolio*.json
+
+# 파이썬
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# 로그 / 임시
+*.log
+.DS_Store
+Thumbs.db
+
+# 원시 API 캐시는 용량이 크고 재생성 가능하므로 추적하지 않는다.
+# (data/metrics.json 은 다른 도구가 소비하므로 커밋한다.)
+data/raw_cache.json
