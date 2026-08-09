@@ -180,10 +180,35 @@ def compute_us(meta, raw):
         "ccy": raw.get("currency", "USD"),
         "sched": _sched_from_history(dv, last_d, ttm_div, raw.get("currency", "USD")),
         "_tr": [(d.isoformat(), v) for d, v in _slice_from(tr, 365 * 3 + 40)],
+        "_px": [(d.isoformat(), v) for d, v in _slice_from(px, 365 * 3 + 40)],
     }
 
 
 # ══════════════════════════════════════════════ 한국 (네이버 금융)
+
+def fetch_kr_unadjusted(code):
+    """국내 ETF의 '미수정' 일별 종가.
+
+    왜 야후를 쓰는가:
+      네이버의 일별시세는 경로(siseJson / fchart requestType=0 / 모바일 price API)를
+      가리지 않고 전부 '수정주가'다. 세 경로의 값이 소수점까지 일치하는 것을 확인했고,
+      441680 은 2022-09-22 에 10,000원으로 상장했는데 네이버 시계열 첫값이 6,328원이다.
+      즉 분배락이 소급 반영된 총수익 시계열이라 '배당 제외 가격'을 뽑아낼 수 없다.
+      야후는 같은 종목을 close(미수정) / adjclose(수정) 두 벌로 주므로 여기서만 가져온다.
+    실패해도 예외를 던지지 않는다. 가격축은 부가 기능이고, 없으면 총수익축으로 대체한다.
+    """
+    now = int(time.time())
+    url = (f"https://query2.finance.yahoo.com/v8/finance/chart/{code}.KS"
+           f"?period1={now - 86400 * 1300}&period2={now}&interval=1d")
+    try:
+        res = http_json(url, tries=2, sleep=1.0)["chart"]["result"][0]
+        ts, close = res["timestamp"], res["indicators"]["quote"][0]["close"]
+        out = [(dt.datetime.utcfromtimestamp(t).date().isoformat(), c)
+               for t, c in zip(ts, close) if c]
+        return out if len(out) >= 60 else None
+    except Exception:
+        return None
+
 
 def fetch_kr(code):
     an = http_json(f"https://m.stock.naver.com/api/stock/{code}/etfAnalysis")
@@ -201,7 +226,7 @@ def fetch_kr(code):
                 px.append((d.isoformat(), c))
         except Exception:
             continue
-    return {"analysis": an, "price": px}
+    return {"analysis": an, "price": px, "price_unadj": fetch_kr_unadjusted(code)}
 
 
 def _kr_num(s):
@@ -210,6 +235,14 @@ def _kr_num(s):
         return None
     m = re.sub(r"[^0-9.]", "", str(s))
     return float(m) if m else None
+
+
+def _kr_px_series(unadj, tr_series):
+    """배당 제외 가격축. 야후 미수정 종가가 없으면 총수익축으로 우아하게 후퇴한다."""
+    if not unadj:
+        return [(d.isoformat(), v) for d, v in _slice_from(tr_series, 365 * 3 + 40)]
+    pts = [(dt.date.fromisoformat(d), v) for d, v in unadj]
+    return [(d.isoformat(), v) for d, v in _slice_from(pts, 365 * 3 + 40)]
 
 
 def compute_kr(meta, raw):
@@ -288,6 +321,8 @@ def compute_kr(meta, raw):
         "sched": _sched_from_months(div.get("dividendMonthThisYear"),
                                     div.get("dividendCountThisYear"), ttm_dps, "KRW", last_d),
         "_tr": [(d.isoformat(), v) for d, v in _slice_from(px, 365 * 3 + 40)],
+        "_px": _kr_px_series(raw.get("price_unadj"), px),
+        "px_src": "야후 미수정 종가" if raw.get("price_unadj") else "가격축 없음(총수익축 대체)",
     }
 
 
@@ -353,6 +388,11 @@ def build_axis(rows, years=3):
     종목마다 상장일·거래일이 달라 그대로 겹쳐 그리면 x축이 어긋난다.
     공통 축에 맞춰 전방보간(forward-fill)해두면 클라이언트에서 포트폴리오
     합성 곡선을 단순 가중합으로 계산할 수 있다. 데이터가 없는 구간은 null.
+
+    두 벌을 만든다.
+      ax  ← _tr : 분배금 재투자 총수익 (배당 포함)
+      axp ← _px : 미수정 종가        (배당 제외, 주가 자체의 궤적)
+    커버드콜은 이 둘의 격차가 곧 '분배금으로 나간 몫'이라 나란히 봐야 판단이 선다.
     """
     ends = [dt.date.fromisoformat(r["_tr"][-1][0]) for r in rows if r.get("_tr")]
     if not ends:
@@ -365,11 +405,11 @@ def build_axis(rows, years=3):
         d += dt.timedelta(days=7)
     axis_iso = [d.isoformat() for d in axis]
 
-    for r in rows:
-        ser = r.pop("_tr", None)
+    def align(ser):
+        """(date,val) 시계열을 공통 축에 전방보간하고 첫 유효값=100 으로 정규화."""
         if not ser:
-            continue
-        pts = [(dt.date.fromisoformat(d), v) for d, v in ser]
+            return None
+        pts = [(dt.date.fromisoformat(x), v) for x, v in ser]
         out, i, cur = [], 0, None
         for a in axis:
             while i < len(pts) and pts[i][0] <= a:
@@ -378,7 +418,18 @@ def build_axis(rows, years=3):
             # 축 시작이 상장 이전이면 값이 없다 → null 로 둬서 차트가 끊기게 한다
             out.append(None if cur is None or a < pts[0][0] else cur)
         base = next((v for v in out if v), None)
-        r["ax"] = [None if v is None else round(v / base * 100, 2) for v in out] if base else None
+        if not base:
+            return None
+        return [None if v is None else round(v / base * 100, 2) for v in out]
+
+    for r in rows:
+        tr, px = r.pop("_tr", None), r.pop("_px", None)
+        if not tr:
+            continue
+        r["ax"] = align(tr)
+        # 가격축은 총수익축과 같은 시작점을 공유해야 두 선의 격차가 곧 분배금이 된다.
+        # align() 이 각자 첫값을 100 으로 잡으므로 이미 같은 출발선이다.
+        r["axp"] = align(px) or r["ax"]
     return axis_iso
 
 
@@ -438,7 +489,10 @@ def score(rows):
         pos = sum(1 for x in clean if (x < v if higher_better else x > v))
         return pos / (n - 1) * 100
 
-    pool = [r for r in rows if r.get("status") == "ok" and r.get("gen") != "BM"]
+    # 점수는 '커버드콜끼리'의 상대평가다. 원지수(BM)·원자재(CM)·레버리지(LV)는
+    # 애초에 옵션 매도를 하지 않으므로 같은 자로 재면 순위가 왜곡된다.
+    NON_CC = ("BM", "CM", "LV")
+    pool = [r for r in rows if r.get("status") == "ok" and r.get("gen") not in NON_CC]
     for r in pool:
         m = r.get("mdd_1y")
         r["calmar_1y"] = (round(r["tr_1y"] / abs(m), 2)

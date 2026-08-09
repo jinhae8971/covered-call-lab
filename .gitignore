@@ -23,3 +23,8 @@ Thumbs.db
 # 원시 API 캐시는 용량이 크고 재생성 가능하므로 추적하지 않는다.
 # (data/metrics.json 은 다른 도구가 소비하므로 커밋한다.)
 data/raw_cache.json
+
+# 템플릿 조립용 임시 조각 (샌드박스 제약으로 삭제가 안 돼 비워만 둠)
+_head.html
+_js*.js
+*.bak
