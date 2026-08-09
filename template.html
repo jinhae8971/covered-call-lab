@@ -119,6 +119,26 @@ h2 .bar{width:3px;height:15px;border-radius:2px;flex:0 0 3px;
   border-top:1px solid var(--line);padding-top:11px}
 
 /* ── KPI ──────────────────────────────────────────── */
+/* 이번 달 분배금 패널 */
+.mncols{display:grid;grid-template-columns:minmax(210px,290px) 1fr;gap:16px;align-items:start}
+@media(max-width:920px){.mncols{grid-template-columns:1fr}}
+.mnbig{font-size:29px;font-weight:800;letter-spacing:-1px;font-variant-numeric:tabular-nums;margin:3px 0 3px}
+.mnsub{font-size:12px;color:var(--tx3);line-height:1.75}
+.mnnext{margin-top:13px;padding:11px 13px;border:1px solid var(--navonline);
+  border-radius:11px;background:var(--navon);font-size:12.5px;line-height:1.7}
+.mnnext b{font-size:14px}
+.mnlist{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--surface2)}
+.mnhd,.mnrow{display:grid;grid-template-columns:104px 1fr 118px;gap:10px;align-items:center;padding:9px 12px}
+.mnhd{background:var(--thbg);font-size:11px;color:var(--tx3);border-bottom:1px solid var(--line);letter-spacing:.2px}
+.mnrow{border-bottom:1px solid var(--tdline);font-size:12.5px}
+.mnrow:last-child{border-bottom:0}
+.mnrow.past{opacity:.42}
+.mnrow .dd{font-weight:700;font-variant-numeric:tabular-nums}
+.mnrow .dd span{display:block;font-size:10.5px;font-weight:600;color:var(--tx3)}
+.mnrow .amt{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.mnrow .amt span{display:block;font-size:10.5px;font-weight:600;color:var(--tx3)}
+.mnrow .nmm span{display:block;font-size:10.5px;color:var(--tx3);font-weight:500}
+.mnempty{padding:26px 14px;text-align:center;color:var(--tx3);font-size:12.5px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(166px,1fr));gap:10px;margin-bottom:16px}
 .kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 15px;transition:.16s}
 .kpi:hover{border-color:var(--line2)}
@@ -254,6 +274,7 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
     </div>
     <button data-tab="portfolio"><span class="ic">&#9670;</span>내 포트폴리오</button>
     <div class="subnav" data-for="portfolio">
+      <a href="#s-month">이번 달 분배금</a>
       <a href="#s-hold">보유 현황</a>
       <a href="#s-trend">수익 추이</a>
       <a href="#s-nav">NAV 추이</a>
@@ -406,6 +427,27 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
       <h1>내 포트폴리오</h1>
       <div class="sub">보유 내역은 이 브라우저에만 저장됩니다 &middot; 계좌 유형별 세후 &middot; 분배금 캘린더 &middot; 비중 관리</div>
     </div>
+  </div>
+
+  <div class="card" id="s-month">
+    <div class="chead">
+      <h2><span class="bar"></span>이번 달 분배금 &amp; 지급 예정일</h2>
+      <div class="seg" id="mnseg">
+        <button data-mn="0" class="on">이번 달</button>
+        <button data-mn="1">2개월</button>
+        <button data-mn="2">3개월</button>
+      </div>
+    </div>
+    <div class="mncols">
+      <div id="mnsum"></div>
+      <div>
+        <div class="mnlist">
+          <div class="mnhd"><div>지급 예상일</div><div>종목 &middot; 분배기준일</div><div style="text-align:right">예상 수령액</div></div>
+          <div id="mnlist"></div>
+        </div>
+      </div>
+    </div>
+    <div class="note" id="mnnote"></div>
   </div>
 
   <div class="card" id="s-hold">
@@ -914,6 +956,69 @@ function calendar(C){
   return {labels, gross, net:gross.map(v=>v*(1-effTax)), effTax};
 }
 
+/* ---------- 지급 예정일 추정 ----------
+   두 계열의 데이터 품질이 다르므로 추정 방식을 나눈다.
+
+   미국(anchor='exdate') : 야후가 실제 분배기준일(ex-date) 이력을 준다.
+     마지막 기준일을 앵커로 잡고 지급 주기만큼 앞으로 굴린다.
+     월간은 '같은 일(日)'을 유지하는 편이 30.4일 누적보다 오차가 작다.
+   한국(anchor='eom')    : 네이버가 개별 분배 이력의 날짜를 주지 않는다.
+     국내 ETF 관행인 '지급월 마지막 영업일 기준, 2영업일 내 지급'을 규칙으로 쓴다.
+     운용사별 예외(15일 기준일 등)가 있어 화면에 '규칙 추정'임을 표기한다.
+
+   ex-date 는 '이 날 전에 사야 받는다'는 기준일이고 실제 입금은 며칠 뒤다.
+   투자자가 실제로 궁금한 것은 입금일이므로 지급일을 앞세우고 기준일을 함께 적는다. */
+const BDAY = d => { const x=new Date(d); while(x.getDay()===0||x.getDay()===6) x.setDate(x.getDate()-1); return x; };
+function addBiz(d,n){ const x=new Date(d); let k=0;
+  while(k<n){ x.setDate(x.getDate()+1); if(x.getDay()!==0&&x.getDay()!==6) k++; } return x; }
+const eom  = (y,m) => BDAY(new Date(y, m+1, 0));
+const dkey = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+function payEvents(C, from, to){
+  const out=[];
+  C.H.forEach(h=>{
+    const sc=h.r.sched; if(!sc || !h.annDiv) return;
+    const w  = sc.months||null;
+    const wt = m => w ? num(w[String(m+1)]) : 1/12;
+    const push = ex => {
+      if(ex<from || ex>to) return;
+      out.push({ex, pay:addBiz(ex, sc.paylag||2), h, mw:wt(ex.getMonth())});
+    };
+    if(sc.anchor==='exdate' && sc.last_ex){
+      const [Y,M,D]=sc.last_ex.split('-').map(Number);
+      let cur=new Date(Y,M-1,D);
+      /* 앵커가 이미 지난 구간이면 from 근처까지 먼저 굴린다 */
+      const step = c => {
+        const n=new Date(c);
+        if(sc.freq==='주간') n.setDate(n.getDate()+7);
+        else if(sc.freq==='분기') n.setMonth(n.getMonth()+3);
+        else if(sc.freq==='연간') n.setFullYear(n.getFullYear()+1);
+        else n.setMonth(n.getMonth()+1);
+        if(sc.freq!=='주간' && n.getDate()!==D) n.setDate(0); /* 말일 넘침 보정 */
+        return n;
+      };
+      for(let i=0;i<80;i++){ cur=step(cur); if(cur>to) break; push(BDAY(cur)); }
+    } else {
+      const pm = sc.paymonths || (w? Object.keys(w).map(Number) : [...Array(12)].map((_,i)=>i+1));
+      let c=new Date(from.getFullYear(), from.getMonth(), 1);
+      for(let i=0;i<24;i++){
+        if(pm.includes(c.getMonth()+1)) push(eom(c.getFullYear(), c.getMonth()));
+        c=new Date(c.getFullYear(), c.getMonth()+1, 1);
+        if(c>to) break;
+      }
+    }
+  });
+  /* 월간 가중치를 그 달의 회차 수로 나눈다. 주간 상품이면 4~5회로 쪼개진다. */
+  const cnt={};
+  out.forEach(e=>{ const k=e.h.idx+'|'+e.ex.getFullYear()+'-'+e.ex.getMonth(); cnt[k]=(cnt[k]||0)+1; });
+  out.forEach(e=>{ const k=e.h.idx+'|'+e.ex.getFullYear()+'-'+e.ex.getMonth();
+    e.gross = e.h.annDiv * e.mw / cnt[k];
+    e.net   = e.gross * (1 - (e.h.us ? C.A.divUS : C.A.divKR));
+    e.est   = e.h.r.sched.anchor==='eom';
+  });
+  return out.sort((a,b)=> a.pay-b.pay || a.h.idx-b.h.idx);
+}
+
 /* ---------- 렌더 ---------- */
 let CH1=null, CH2=null, CH3=null, CH4=null;
 let NAVK='own';   /* 'own' = 각 종목 시작점 100 · 'common' = 공통 시작점 100 */
@@ -963,6 +1068,8 @@ function renderPF(){
   document.getElementById('pftbl').parentElement.style.display = C.H.length?'':'none';
   empty.style.display = C.H.length?'none':'';
   document.getElementById('pfcharts').style.display = C.H.length?'':'none';
+  document.getElementById('s-month').style.display = C.H.length?'':'none';
+  renderMonth(C);
 
   const olabel=o=>{
     let n=(o.name||'');
@@ -1030,6 +1137,68 @@ function renderPF(){
      <br>보유 내역은 이 브라우저에만 저장되며 어떤 서버로도 전송되지 않습니다. 다른 기기에서 쓰려면 JSON으로 내보내 옮기세요.`;
 
   drawCharts(C);
+}
+
+/* ---------- 이번 달 분배금 · 지급 예정일 ---------- */
+let MNK=0;   /* 0 = 이번 달 · 1 = 2개월 · 2 = 3개월 */
+
+function renderMonth(C){
+  const sum=document.getElementById('mnsum'), list=document.getElementById('mnlist');
+  if(!C.H.length){ return; }
+
+  const now   = new Date(); now.setHours(0,0,0,0);
+  const from  = new Date(now.getFullYear(), now.getMonth(), 1);
+  const to    = new Date(now.getFullYear(), now.getMonth()+MNK+1, 0);
+  const ev    = payEvents(C, from, to);
+
+  /* 좌측 요약은 항상 '이번 달' 기준이다. 창을 넓혀도 이번 달 수치는 흔들리지 않아야 한다. */
+  const sameM = (d) => d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+  const thisM = ev.filter(e=>sameM(e.pay));
+  /* 기준일은 이번 달인데 입금이 다음 달로 넘어가는 건(국내 월말 기준일 등)을 따로 집계한다.
+     '이번 달 배당'을 입금 기준으로만 보면 이 몫이 통째로 빠져 실제보다 작아 보인다. */
+  const exM   = ev.filter(e=>sameM(e.ex));
+  const spill = exM.filter(e=>!sameM(e.pay));
+  const done  = thisM.filter(e=>e.pay< now), left = thisM.filter(e=>e.pay>=now);
+  const g=a=>a.reduce((x,e)=>x+e.gross,0), n=a=>a.reduce((x,e)=>x+e.net,0);
+  const next  = ev.find(e=>e.pay>=now);
+  const dday  = next ? Math.round((next.pay-now)/86400000) : null;
+  const noSch = C.H.filter(h=>!h.r.sched || !h.annDiv);
+
+  sum.innerHTML =
+    `<div class="mnsub">${now.getFullYear()}년 ${now.getMonth()+1}월 예상 수령액 (세후)</div>
+     <div class="mnbig ${n(thisM)>0?'pos':''}">${won0(n(thisM))}원</div>
+     <div class="mnsub">세전 ${won0(g(thisM))}원 · ${C.A.label}<br>
+       총 ${thisM.length}건 중 <b>${done.length}건 지급 완료</b> · 남은 ${left.length}건 ${won0(n(left))}원</div>
+     ${spill.length?`<div class="mnsub" style="margin-top:8px">이번 달 <b>기준일</b>로 잡힌 분배 ${exM.length}건 ${won0(n(exM))}원 중
+       <b>${spill.length}건 ${won0(n(spill))}원</b>은 다음 달 초 입금됩니다.</div>`:''}
+     ${next ? `<div class="mnnext">다음 지급 예정<br>
+        <b>${next.pay.getMonth()+1}월 ${next.pay.getDate()}일</b>
+        <span class="mini">(${dday===0?'오늘':'D-'+dday})</span> ·
+        ${next.h.r.ticker} ${won0(next.net)}원</div>`
+      : `<div class="mnnext">이번 달 남은 지급 예정이 없습니다.</div>`}`;
+
+  const rows = ev.map(e=>{
+    const past = e.pay < now;
+    let nm = (e.h.r.name||'');
+    if(nm.length>24) nm = nm.slice(0,23).replace(/[\s·(,]+$/,'')+'…';
+    return `<div class="mnrow ${past?'past':''}">
+      <div class="dd">${e.pay.getMonth()+1}/${e.pay.getDate()}
+        <span>${past?'지급 완료':'D-'+Math.round((e.pay-now)/86400000)}</span></div>
+      <div class="nmm">${e.h.r.ticker}${e.est?' <span class="mini" title="국내 관행 기반 규칙 추정">≈</span>':''}
+        <span>${nm} · 기준일 ${e.ex.getMonth()+1}/${e.ex.getDate()}</span></div>
+      <div class="amt">${won0(e.net)}원<span>세전 ${won0(e.gross)}</span></div>
+    </div>`;
+  }).join('');
+  list.innerHTML = rows || `<div class="mnempty">해당 기간에 예정된 분배가 없습니다.</div>`;
+
+  document.getElementById('mnnote').innerHTML =
+    `지급일은 <b>추정치</b>입니다. 미국 종목은 실제 분배기준일(ex-date) 이력의 마지막 회차를 앵커로 지급 주기만큼 굴렸고,
+     실입금은 기준일로부터 <b>영업일 3일</b> 뒤로 가정했습니다.
+     <b>≈</b> 표시된 국내 종목은 네이버가 개별 분배 이력의 날짜를 주지 않아
+     <b>지급월 마지막 영업일 기준 · 2영업일 내 지급</b>이라는 국내 관행을 규칙으로 적용했습니다(운용사별로 15일 기준일 등 예외 있음).
+     금액은 <b>최근 12개월 실적 분배금</b>을 월별 가중치로 배분한 값이며, 커버드콜 분배금은 옵션 프리미엄에 따라 매월 달라집니다.
+     주말은 직전 영업일로 당겼고 공휴일은 반영되지 않습니다.
+     ${noSch.length?`<br><span class="neg">분배 일정 데이터가 없는 종목 ${noSch.length}종(${noSch.map(h=>h.r.ticker).join(', ')})은 제외했습니다.</span>`:''}`;
 }
 
 /* ---------- 차트 ---------- */
@@ -1310,6 +1479,11 @@ document.querySelectorAll('#pieseg button').forEach(b=>b.onclick=()=>{
 document.querySelectorAll('#navseg button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#navseg button').forEach(o=>o.classList.remove('on'));
   b.classList.add('on'); NAVK=b.dataset.nav; renderPF();
+});
+
+document.querySelectorAll('#mnseg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#mnseg button').forEach(o=>o.classList.remove('on'));
+  b.classList.add('on'); MNK=+b.dataset.mn; renderPF();
 });
 
 /* ---------- 테마 전환 ---------- */

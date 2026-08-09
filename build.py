@@ -345,8 +345,13 @@ def _sched_from_history(dv, last_d, ttm_total, ccy):
     w = {k: round(v / tot, 4) for k, v in w.items()}
     n = len(ttm)
     freq = "주간" if n >= 40 else "월간" if n >= 10 else "분기" if n >= 3 else "연간"
+    # 실제 분배기준일(ex-date) 이력. 다음 지급일 추정의 앵커로 쓴다.
+    # 야후가 주는 것은 배당락일이며 실지급일은 통상 1~5영업일 뒤다. 그 시차는 화면에서 밝힌다.
+    ex = [d.isoformat() for d, _ in ttm][-8:]
     return {"ccy": ccy, "annual": round(ttm_total, 4), "months": w,
-            "pays": n, "freq": freq, "basis": "실제 분배 이력(TTM)"}
+            "pays": n, "freq": freq, "basis": "실제 분배 이력(TTM)",
+            "exdates": ex, "last_ex": ex[-1] if ex else None,
+            "anchor": "exdate", "paylag": 3}
 
 
 def _sched_from_months(month_csv, count, ttm_dps, ccy, asof):
@@ -377,9 +382,14 @@ def _sched_from_months(month_csv, count, ttm_dps, ccy, asof):
         pay_months = months[:1] or [12]
 
     w = {str(m): round(1.0 / len(pay_months), 4) for m in pay_months}
+    # 네이버는 개별 분배 이력의 '날짜'를 주지 않는다. 국내 ETF 관행을 규칙으로 적는다.
+    #   분배기준일 = 해당 월 마지막 영업일, 실지급 = 기준일 + 2영업일 이내
+    # 운용사·상품별로 15일 기준일을 쓰는 예외가 있어 화면에서 '규칙 추정'임을 밝힌다.
     return {"ccy": ccy, "annual": round(float(ttm_dps), 2), "months": w,
             "pays": per_year, "freq": freq,
-            "basis": "TTM 주당분배금 균등 배분(회차별 편차 미반영)"}
+            "basis": "TTM 주당분배금 균등 배분(회차별 편차 미반영)",
+            "paymonths": pay_months, "anchor": "eom", "paylag": 2,
+            "rule": "국내 관행: 매 지급월 마지막 영업일 분배기준일, 2영업일 내 지급"}
 
 
 def build_axis(rows, years=3):
