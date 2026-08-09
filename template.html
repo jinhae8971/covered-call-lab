@@ -3,26 +3,61 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>커버드콜 ETF 리서치 &amp; 포트폴리오</title>
+<title>경제적자유 랩 &mdash; ETF 리서치 &amp; 포트폴리오</title>
+<script>
+/* 페인트 전에 테마를 확정한다. 늦게 붙이면 다크→라이트 전환이 한 프레임 번쩍인다. */
+(function(){var t='dark';try{var v=localStorage.getItem('ccl_theme_v1');if(v==='light'||v==='dark')t=v;}catch(e){}
+document.documentElement.setAttribute('data-theme',t);})();
+</script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-:root{
-  --bg:#0a0d12; --side:#0d1117; --surface:#141922; --surface2:#1a2030; --surface3:#212a3a;
-  --line:#242d3c; --line2:#333e52;
+/* ── 테마 토큰 ──────────────────────────────────────────
+   다크가 기본. [data-theme="light"] 가 붙으면 같은 이름의 변수만 갈아끼운다.
+   컴포넌트 CSS 는 전부 var() 만 참조하므로 규칙을 두 벌 쓸 필요가 없다.
+   세대 색(--g1~--lv)은 두 테마에서 동일하게 유지한다. 표·차트·범례가
+   같은 색으로 묶여 있어 테마마다 다르면 오히려 식별이 어려워진다. */
+:root, html[data-theme="dark"]{
+  --bg:#0a0d12; --side1:#10151d; --side2:#0a0d12;
+  --surface:#141922; --surface2:#1a2030; --surface3:#212a3a;
+  --line:#242d3c; --line2:#333e52; --grid:#1e2532;
   --tx:#eef2f7; --tx2:#93a1b5; --tx3:#5f6b7d;
-  --acc:#5b9cf6; --acc2:#7c6cf0;
+  --acc:#5b9cf6; --acc2:#7c6cf0; --onacc:#08111f;
   --pos:#37d67a; --neg:#ff5f5f; --warn:#f0a92e;
   --g1:#e0605e; --g2:#e8933a; --g3:#4a9eea; --g4:#a86fd6;
   --bm:#7a8798; --cm:#d4a017; --lv:#e84393;
+  --code:#b9c6da; --thbg:#111722; --tdline:#1b222e; --rowhover:#181f2b;
+  --chipon-bg:rgba(91,156,246,.16); --chipon-bd:rgba(91,156,246,.55); --chipon-tx:#cfe2ff;
+  --btnhover:#2a3446; --bordhover:#44526c;
+  --dgr:#ff9c9c; --dgrbg:#3a2226; --dgrbd:#6b3138;
+  --navon:linear-gradient(90deg,rgba(91,156,246,.20),rgba(124,108,240,.08));
+  --navonline:rgba(91,156,246,.30);
+  --pfline:#ffffff; --divgross:#2f4a63;
+  --shadow:0 1px 0 rgba(255,255,255,.025),0 14px 30px -24px #000;
   --r:14px;
+}
+html[data-theme="light"]{
+  --bg:#f4f6fa; --side1:#ffffff; --side2:#eef2f7;
+  --surface:#ffffff; --surface2:#f1f4f9; --surface3:#e6ebf3;
+  --line:#dde3ec; --line2:#c6d0de; --grid:#e8edf4;
+  --tx:#131a25; --tx2:#4d5a6c; --tx3:#7d8899;
+  --acc:#2563eb; --acc2:#6d4df0; --onacc:#ffffff;
+  --pos:#0f9d58; --neg:#d92d20; --warn:#b45309;
+  --code:#3b475a; --thbg:#eef2f7; --tdline:#e6ebf3; --rowhover:#f3f7fd;
+  --chipon-bg:rgba(37,99,235,.10); --chipon-bd:rgba(37,99,235,.45); --chipon-tx:#1d4ed8;
+  --btnhover:#e6ebf3; --bordhover:#a9b6c8;
+  --dgr:#b42318; --dgrbg:#fdecec; --dgrbd:#f0b7b7;
+  --navon:linear-gradient(90deg,rgba(37,99,235,.13),rgba(109,77,240,.05));
+  --navonline:rgba(37,99,235,.32);
+  --pfline:#0f172a; --divgross:#a8c0d6;
+  --shadow:0 1px 2px rgba(16,24,40,.05),0 10px 24px -18px rgba(16,24,40,.35);
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--tx);
   font:15px/1.62 Pretendard,-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-code{background:var(--surface3);padding:1px 5px;border-radius:5px;font-size:12px;color:#b9c6da}
+code{background:var(--surface3);padding:1px 5px;border-radius:5px;font-size:12px;color:var(--code)}
 b{font-weight:700}
 .pos{color:var(--pos)} .neg{color:var(--neg)}
 .mini{color:var(--tx3);font-size:11.5px}
@@ -30,7 +65,7 @@ b{font-weight:700}
 /* ── 레이아웃 ───────────────────────────────────────── */
 .app{display:flex;min-height:100vh}
 .side{position:sticky;top:0;height:100vh;width:238px;flex:0 0 238px;
-  background:linear-gradient(180deg,#10151d 0%,#0a0d12 100%);
+  background:linear-gradient(180deg,var(--side1) 0%,var(--side2) 100%);
   border-right:1px solid var(--line);padding:22px 16px;
   display:flex;flex-direction:column;gap:20px;overflow-y:auto}
 .main{flex:1;min-width:0;padding:30px 32px 90px;max-width:1600px}
@@ -38,7 +73,7 @@ b{font-weight:700}
 .brand{display:flex;align-items:center;gap:10px;padding:0 4px}
 .brand .mk{width:32px;height:32px;border-radius:9px;flex:0 0 32px;
   background:linear-gradient(135deg,var(--acc),var(--acc2));
-  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#08111f}
+  display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:var(--onacc)}
 .brand .tt{font-size:13.5px;font-weight:800;letter-spacing:-.2px;line-height:1.25}
 .brand .st{font-size:10.5px;color:var(--tx3);margin-top:1px}
 
@@ -47,15 +82,19 @@ b{font-weight:700}
   border:0;border-radius:10px;background:transparent;color:var(--tx2);
   font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:.16s}
 .nav>button:hover{background:var(--surface2);color:var(--tx)}
-.nav>button.on{background:linear-gradient(90deg,rgba(91,156,246,.20),rgba(124,108,240,.08));
-  color:#fff;box-shadow:inset 0 0 0 1px rgba(91,156,246,.30)}
+.nav>button.on{background:var(--navon);
+  color:var(--tx);box-shadow:inset 0 0 0 1px var(--navonline)}
 .nav .ic{width:18px;text-align:center;font-size:14px}
 
 .subnav{display:flex;flex-direction:column;gap:1px;padding-left:6px;
   border-left:1px solid var(--line);margin-left:8px}
 .subnav a{color:var(--tx3);text-decoration:none;font-size:12.5px;padding:5px 9px;border-radius:7px;transition:.15s}
 .subnav a:hover{color:var(--tx);background:var(--surface2)}
-.side .meta{margin-top:auto;font-size:11px;color:var(--tx3);line-height:1.65;padding:0 4px}
+.thbtn{margin-top:auto;width:100%;padding:9px 12px;border:1px solid var(--line);
+  border-radius:10px;background:var(--surface);color:var(--tx2);font:inherit;font-size:12.5px;
+  font-weight:600;cursor:pointer;transition:.16s;text-align:center}
+.thbtn:hover{background:var(--surface2);color:var(--tx);border-color:var(--bordhover)}
+.side .meta{margin-top:14px;font-size:11px;color:var(--tx3);line-height:1.65;padding:0 4px}
 .side .meta b{color:var(--tx2)}
 
 .pane{display:none}
@@ -69,7 +108,7 @@ h1{font-size:22px;margin:0;letter-spacing:-.6px;font-weight:800}
 /* ── 카드 ──────────────────────────────────────────── */
 .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
   padding:20px 22px;margin-bottom:16px;
-  box-shadow:0 1px 0 rgba(255,255,255,.025),0 14px 30px -24px #000}
+  box-shadow:var(--shadow)}
 h2{font-size:15px;margin:0 0 14px;display:flex;align-items:center;gap:9px;
   letter-spacing:-.2px;font-weight:700}
 h2 .bar{width:3px;height:15px;border-radius:2px;flex:0 0 3px;
@@ -101,14 +140,14 @@ h2 .bar{width:3px;height:15px;border-radius:2px;flex:0 0 3px;
 .chip{display:inline-flex;align-items:center;padding:6px 13px;border-radius:999px;
   border:1px solid var(--line2);background:var(--surface2);color:var(--tx2);
   font-size:12.5px;font-weight:600;cursor:pointer;user-select:none;transition:.15s;white-space:nowrap}
-.chip:hover{border-color:#44526c;color:var(--tx)}
-.chip.on{background:rgba(91,156,246,.16);border-color:rgba(91,156,246,.55);color:#cfe2ff}
+.chip:hover{border-color:var(--bordhover);color:var(--tx)}
+.chip.on{background:var(--chipon-bg);border-color:var(--chipon-bd);color:var(--chipon-tx)}
 .seg{display:inline-flex;background:var(--surface3);border:1px solid var(--line);
   border-radius:10px;padding:3px;gap:2px}
 .seg button{border:0;background:transparent;color:var(--tx2);font:inherit;font-size:12.5px;
   font-weight:600;padding:6px 13px;border-radius:7px;cursor:pointer;transition:.15s;white-space:nowrap}
 .seg button:hover{color:var(--tx)}
-.seg button.on{background:var(--acc);color:#08111f}
+.seg button.on{background:var(--acc);color:var(--onacc)}
 input[type=search],input[type=number],select{
   background:var(--surface3);border:1px solid var(--line2);color:var(--tx);
   border-radius:8px;padding:6px 10px;font:inherit;font-size:12.5px;outline:0;transition:.15s}
@@ -117,29 +156,29 @@ input[type=search]{min-width:180px;flex:1;max-width:280px}
 .btn{background:var(--surface3);border:1px solid var(--line2);color:var(--tx);
   border-radius:9px;padding:7px 13px;font:inherit;font-size:12.5px;font-weight:600;
   cursor:pointer;transition:.15s}
-.btn:hover{background:#2a3446;border-color:#44526c}
-.btn.pri{background:linear-gradient(135deg,var(--acc),#4a86e0);border-color:transparent;color:#08111f}
+.btn:hover{background:var(--btnhover);border-color:var(--bordhover)}
+.btn.pri{background:linear-gradient(135deg,var(--acc),var(--acc2));border-color:transparent;color:var(--onacc)}
 .btn.pri:hover{filter:brightness(1.08)}
-.btn.dgr{color:#ff9c9c}
-.btn.dgr:hover{background:#3a2226;border-color:#6b3138}
+.btn.dgr{color:var(--dgr)}
+.btn.dgr:hover{background:var(--dgrbg);border-color:var(--dgrbd)}
 
 /* ── 표 ───────────────────────────────────────────── */
 .tw{overflow:auto;margin:0 -22px;padding:0 22px;max-height:none}
 table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;min-width:960px}
-th{position:sticky;top:0;z-index:2;background:#111722;color:var(--tx2);
+th{position:sticky;top:0;z-index:2;background:var(--thbg);color:var(--tx2);
   font-weight:700;font-size:11px;text-align:right;padding:9px 8px;
   border-bottom:1px solid var(--line2);cursor:pointer;white-space:nowrap;letter-spacing:.1px}
 th:hover{color:var(--tx)}
 th.l,td.l{text-align:left}
-td{padding:9px 8px;text-align:right;border-bottom:1px solid #1b222e;
+td{padding:9px 8px;text-align:right;border-bottom:1px solid var(--tdline);
   font-variant-numeric:tabular-nums;white-space:nowrap}
 tbody tr{transition:background .12s}
-tbody tr:hover{background:#181f2b}
+tbody tr:hover{background:var(--rowhover)}
 tr.bm td{background:rgba(122,135,152,.06)}
 .nm{font-weight:600}
 .tk{color:var(--tx3);margin-left:6px;font-size:11px;font-variant-numeric:tabular-nums}
 .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10.5px;
-  font-weight:700;color:#08111f}
+  font-weight:700;color:var(--onacc)}
 .sc{display:inline-block;min-width:34px;padding:2px 7px;border-radius:7px;font-weight:800}
 .ar{color:var(--acc);margin-left:3px}
 
@@ -197,9 +236,9 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
 
 <aside class="side">
   <div class="brand">
-    <div class="mk">CC</div>
+    <div class="mk">FL</div>
     <div>
-      <div class="tt">Covered-Call Lab</div>
+      <div class="tt">경제적자유 랩</div>
       <div class="st">총수익률 우선 리서치</div>
     </div>
   </div>
@@ -217,11 +256,13 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
     <div class="subnav" data-for="portfolio">
       <a href="#s-hold">보유 현황</a>
       <a href="#s-trend">수익 추이</a>
+      <a href="#s-nav">NAV 추이</a>
       <a href="#s-div">분배금 캘린더</a>
       <a href="#s-alloc">자산 비중</a>
     </div>
   </nav>
 
+  <button class="thbtn" id="thbtn" type="button">&#9788; 라이트 모드</button>
   <div class="meta">
     갱신 <b id="gen"></b><br>
     수록 <b id="cnt"></b><br>
@@ -409,12 +450,25 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
       <div class="chead">
         <h2><span class="bar"></span>보유 종목 수익 추이 &mdash; 최근 3년</h2>
         <div class="seg" id="axseg">
-          <button data-ax="ax" class="on">배당 포함 총수익</button>
-          <button data-ax="axp">배당 제외 주가</button>
+          <button data-ax="tr"   title="분배금을 현금으로 받아 쌓아둔 누적 수익. 재투자하지 않은 경우.">총수익률 (현금)</button>
+          <button data-ax="drip" class="on" title="분배금을 받는 즉시 같은 종목에 재투자했다고 가정. 복리 효과 포함.">DRIP (재투자)</button>
+          <button data-ax="px"   title="분배금을 제외한 주가만의 궤적.">주가수익률</button>
         </div>
       </div>
       <div class="ch tall"><canvas id="cp1"></canvas></div>
       <div class="note" id="np1"></div>
+    </div>
+
+    <div class="card" id="s-nav">
+      <div class="chead">
+        <h2><span class="bar"></span>보유 종목 NAV 추이 &mdash; 원금이 어디까지 왔나</h2>
+        <div class="seg" id="navseg">
+          <button data-nav="own" class="on">각자 상장 시점 = 100</button>
+          <button data-nav="common">공통 시점 = 100</button>
+        </div>
+      </div>
+      <div class="ch tall"><canvas id="cp4"></canvas></div>
+      <div class="note" id="np4"></div>
     </div>
 
     <div class="grid g2">
@@ -473,7 +527,7 @@ const avg=a=>{const c=a.filter(x=>x!=null);return c.length?c.reduce((x,y)=>x+y,0
    따라서 탭을 열 때마다 해당 차트를 resize() 해준다. */
 const TKEY='ccl_tab_v1';
 function resizeCharts(){
-  ['c1','c2','c3','c4','cp1','cp2','cp3'].forEach(id=>{
+  ['c1','c2','c3','c4','cp1','cp2','cp3','cp4'].forEach(id=>{
     const ch = (typeof Chart!=='undefined' && Chart.getChart) ? Chart.getChart(id) : null;
     if(ch) try{ ch.resize(); }catch(e){}
   });
@@ -547,8 +601,12 @@ function view(){
     return st.asc?x-y:y-x;
   });
 }
-function scColor(s){ if(s==null)return 'background:#212a3a;color:#5f6b7d';
-  const h=Math.round(s*1.2); return `background:hsl(${h} 55% 20%);color:hsl(${h} 78% 68%)`; }
+function scColor(s){
+  const lt = document.documentElement.getAttribute('data-theme')==='light';
+  if(s==null) return 'background:var(--surface3);color:var(--tx3)';
+  const h=Math.round(s*1.2);
+  return lt ? `background:hsl(${h} 82% 92%);color:hsl(${h} 72% 28%)`
+            : `background:hsl(${h} 55% 20%);color:hsl(${h} 78% 68%)`; }
 function render(){
   document.querySelector('#tbl tbody').innerHTML = view().map(r=>`
    <tr class="${r.gen==='BM'?'bm':''}">
@@ -589,12 +647,38 @@ document.querySelectorAll('.chip[data-f]').forEach(c=>c.onclick=()=>{
 document.getElementById('q').oninput=e=>{st.q=e.target.value.toLowerCase();render();};
 render();
 
-/* ---------- 차트 ---------- */
-Chart.defaults.color='#93a1b5'; Chart.defaults.borderColor='#242d3c';
-Chart.defaults.font.family="Pretendard,'Malgun Gothic',sans-serif";
-const GRID='#1e2532';
+/* ---------- 테마 ---------- */
+const THKEY='ccl_theme_v1';
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let GRID='#1e2532', PFLINE='#ffffff', PIEBORD='#141922', CTRSUB='#93a1b5', CTRMAIN='#eef2f7';
+
+/* 차트는 CSS 변수를 읽지 못한다. 테마가 바뀔 때마다 값을 여기서 다시 뽑아 넣는다. */
+function applyChartTheme(){
+  GRID    = cssv('--grid')    || GRID;
+  PFLINE  = cssv('--pfline')  || PFLINE;
+  PIEBORD = cssv('--surface') || PIEBORD;
+  CTRSUB  = cssv('--tx2')     || CTRSUB;
+  CTRMAIN = cssv('--tx')      || CTRMAIN;
+  if(typeof Chart!=='undefined'){
+    Chart.defaults.color       = cssv('--tx2')  || '#93a1b5';
+    Chart.defaults.borderColor = cssv('--line') || '#242d3c';
+    Chart.defaults.font.family = "Pretendard,'Malgun Gothic',sans-serif";
+  }
+}
+applyChartTheme();
+
+function kill(id){
+  if(typeof Chart==='undefined'||!Chart.getChart) return;
+  const c=Chart.getChart(id); if(c) c.destroy();
+}
+
+/* ---------- 분석 탭 차트 ---------- */
+/* 테마를 바꾸면 축·격자 색을 갈아끼워야 해서 통째로 다시 그린다.
+   Chart.js 는 생성 후 색 변경을 지원하지만 스케일·플러그인까지 손대야 해
+   재생성이 더 짧고 확실하다. 데이터는 이미 메모리에 있어 비용도 없다. */
+function buildAnalysisCharts(){
 const sets=g=>({label:GN[g],backgroundColor:GC[g],borderColor:GC[g],pointRadius:6,pointHoverRadius:9});
-const scat=(id,xk,yk,xl,yl)=>new Chart(document.getElementById(id),{type:'scatter',
+const scat=(id,xk,yk,xl,yl)=>(kill(id),new Chart(document.getElementById(id),{type:'scatter',
   data:{datasets:CC.concat(['BM']).map(g=>({...sets(g),
     data:R.filter(r=>r.gen===g&&r[xk]!=null&&r[yk]!=null)
       .map(r=>({x:r[xk],y:r[yk],n:r.name,t:r.ticker,m:r.market}))}))},
@@ -602,26 +686,15 @@ const scat=(id,xk,yk,xl,yl)=>new Chart(document.getElementById(id),{type:'scatte
     legend:{labels:{boxWidth:10,usePointStyle:true,pointStyle:'circle'}},
     tooltip:{callbacks:{label:c=>`${c.raw.m==='KR'?'🇰🇷':'🇺🇸'} ${c.raw.n} · ${xl} ${c.raw.x.toFixed(1)}% / ${yl} ${c.raw.y.toFixed(1)}%`}}},
    scales:{x:{title:{display:true,text:xl},grid:{color:GRID}},
-           y:{title:{display:true,text:yl},grid:{color:GRID}}}}});
+           y:{title:{display:true,text:yl},grid:{color:GRID}}}}}));
 scat('c1','ttm_yield','tr_1y','분배율 TTM (%)','총수익률 1년 (%)');
 scat('c2','capture_1y','mdd_edge_1y','상승참여율 (%)','낙폭 방어폭 (%p, 원지수 대비)');
 
-/* 상관계수 */
-(function(){
-  const d=R.filter(r=>isCC(r)&&r.ttm_yield!=null&&r.tr_1y!=null);
-  const mx=avg(d.map(r=>r.ttm_yield)), my=avg(d.map(r=>r.tr_1y));
-  let n=0,a=0,b=0; d.forEach(r=>{const u=r.ttm_yield-mx,v=r.tr_1y-my;n+=u*v;a+=u*u;b+=v*v;});
-  const cc=n/Math.sqrt(a*b);
-  document.getElementById('n1').innerHTML =
-    `분배율과 총수익률의 상관계수 <b style="color:${cc<0.2?'var(--neg)':'var(--pos)'}">r = ${cc.toFixed(2)}</b> (n=${d.length}).
-     ${cc<0.2?'상관이 거의 없거나 <b>음(-)</b>입니다. 즉 <b>분배율을 보고 종목을 고르면 총수익률은 오히려 손해</b>일 수 있다는 뜻입니다.'
-              :'이 구간에서는 분배율이 높은 상품이 총수익률도 높았습니다. 단, 특정 시장국면(고변동성 횡보장)의 결과일 수 있으니 기간을 바꿔가며 확인하세요.'}`;
-})();
 
 /* NAV 침식 막대 */
 (function(){
   const d=R.filter(r=>r.px_si!=null&&isCC(r)).sort((a,b)=>a.px_si-b.px_si).slice(0,22);
-  new Chart(document.getElementById('c3'),{type:'bar',
+  kill('c3'); new Chart(document.getElementById('c3'),{type:'bar',
    data:{labels:d.map(r=>r.market==='KR'?r.name.slice(0,16):r.ticker),
     datasets:[{data:d.map(r=>r.px_si),backgroundColor:d.map(r=>GC[r.gen]),borderRadius:3}]},
    options:{indexAxis:'y',maintainAspectRatio:false,plugins:{legend:{display:false},
@@ -633,14 +706,29 @@ scat('c2','capture_1y','mdd_edge_1y','상승참여율 (%)','낙폭 방어폭 (%p
 /* 세대별 평균 */
 (function(){
   const gs=CC;
-  new Chart(document.getElementById('c4'),{type:'bar',
+  kill('c4'); new Chart(document.getElementById('c4'),{type:'bar',
    data:{labels:gs.map(g=>GN[g]),datasets:[
-    {label:'분배율 TTM',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.ttm_yield))),backgroundColor:'#e8933a',borderRadius:4},
-    {label:'총수익 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.tr_1y))),backgroundColor:'#37d67a',borderRadius:4},
-    {label:'초과수익 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.excess_1y))),backgroundColor:'#5b9cf6',borderRadius:4},
-    {label:'MDD 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.mdd_1y))),backgroundColor:'#ff5f5f',borderRadius:4}]},
+    {label:'분배율 TTM',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.ttm_yield))),backgroundColor:cssv('--g2'),borderRadius:4},
+    {label:'총수익 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.tr_1y))),backgroundColor:cssv('--pos'),borderRadius:4},
+    {label:'초과수익 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.excess_1y))),backgroundColor:cssv('--acc'),borderRadius:4},
+    {label:'MDD 1년',data:gs.map(g=>avg(R.filter(r=>r.gen===g).map(r=>r.mdd_1y))),backgroundColor:cssv('--neg'),borderRadius:4}]},
    options:{maintainAspectRatio:false,plugins:{legend:{labels:{boxWidth:10}}},
     scales:{y:{grid:{color:GRID},title:{display:true,text:'%'}},x:{grid:{display:false}}}}});
+})();
+
+}
+buildAnalysisCharts();
+
+/* 상관계수 */
+(function(){
+  const d=R.filter(r=>isCC(r)&&r.ttm_yield!=null&&r.tr_1y!=null);
+  const mx=avg(d.map(r=>r.ttm_yield)), my=avg(d.map(r=>r.tr_1y));
+  let n=0,a=0,b=0; d.forEach(r=>{const u=r.ttm_yield-mx,v=r.tr_1y-my;n+=u*v;a+=u*u;b+=v*v;});
+  const cc=n/Math.sqrt(a*b);
+  document.getElementById('n1').innerHTML =
+    `분배율과 총수익률의 상관계수 <b style="color:${cc<0.2?'var(--neg)':'var(--pos)'}">r = ${cc.toFixed(2)}</b> (n=${d.length}).
+     ${cc<0.2?'상관이 거의 없거나 <b>음(-)</b>입니다. 즉 <b>분배율을 보고 종목을 고르면 총수익률은 오히려 손해</b>일 수 있다는 뜻입니다.'
+              :'이 구간에서는 분배율이 높은 상품이 총수익률도 높았습니다. 단, 특정 시장국면(고변동성 횡보장)의 결과일 수 있으니 기간을 바꿔가며 확인하세요.'}`;
 })();
 
 /* ---------- 인사이트 (데이터에서 자동 생성) ---------- */
@@ -827,8 +915,42 @@ function calendar(C){
 }
 
 /* ---------- 렌더 ---------- */
-let CH1=null, CH2=null, CH3=null;
-let AXK='ax';      /* 'ax' = 배당 포함 총수익 · 'axp' = 배당 제외 주가 */
+let CH1=null, CH2=null, CH3=null, CH4=null;
+let NAVK='own';   /* 'own' = 각 종목 시작점 100 · 'common' = 공통 시작점 100 */
+let AXK='drip';    /* 'tr' = 분배금 현금 수령 · 'drip' = 분배금 재투자 · 'px' = 주가만 */
+
+/* ── 세 가지 수익 정의를 한 곳에서 만든다 ──────────────────────────────
+   px   : 주가만. 미수정 종가(axp). 원금의 궤적.
+   drip : 분배금을 받는 즉시 재투자. 조정종가 기반(ax). 복리가 붙는다.
+   tr   : 분배금을 현금으로 받아 쌓아둠. 재투자하지 않으므로 복리가 없다.
+
+   tr 은 원본 데이터에 없어 두 축에서 역산한다.
+     TR_t / TR_{t-1} = (P_t + D_t) / P_{t-1}
+     ⇒ D_t = P_{t-1} · (TR_t / TR_{t-1}) − P_t
+   이렇게 구간별 분배금 D_t 를 뽑아 현금으로 누적하고 주가에 더한다.
+   국내 종목은 ax(네이버 수정주가)와 axp(야후 미수정 종가)의 출처가 달라
+   D_t 가 미세하게 음수로 나오는 구간이 생긴다. 분배금은 음수일 수 없으므로 0 으로 막는다. */
+function seriesOf(r, mode){
+  if(mode==='drip') return Array.isArray(r.ax)? r.ax : null;
+  if(mode==='px')   return Array.isArray(r.axp)? r.axp : (Array.isArray(r.ax)? r.ax : null);
+  if(!Array.isArray(r.ax) || !Array.isArray(r.axp)) return Array.isArray(r.ax)? r.ax : null;
+  if(r._trcash) return r._trcash;
+  const a=r.ax, p=r.axp, n=Math.min(a.length,p.length), out=new Array(n).fill(null);
+  let cum=0, prev=-1;
+  for(let i=0;i<n;i++){
+    if(a[i]==null||p[i]==null||!a[i]||!p[i]){ out[i]=null; continue; }
+    if(prev>=0){
+      let d = p[prev]*(a[i]/a[prev]) - p[i];
+      if(!isFinite(d) || d<0) d=0;
+      cum += d;
+    }
+    out[i] = +(p[i]+cum).toFixed(4);
+    prev = i;
+  }
+  r._trcash = out;
+  return out;
+}
+const AXNAME={tr:'총수익률 (분배금 현금 수령)', drip:'DRIP (분배금 재투자)', px:'주가수익률 (분배금 제외)'};
 let PIEK='item';   /* 'item' = 종목별 · 'gen' = 자산군별 */
 
 function renderPF(){
@@ -920,9 +1042,9 @@ const centerText={id:'ctr',afterDraw(ch,a,o){
   const x=(chartArea.left+chartArea.right)/2, y=(chartArea.top+chartArea.bottom)/2;
   ctx.save();
   ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillStyle='#93a1b5'; ctx.font='600 11px Pretendard,sans-serif';
+  ctx.fillStyle=CTRSUB; ctx.font='600 11px Pretendard,sans-serif';
   ctx.fillText(o.cap||'', x, y-13);
-  ctx.fillStyle='#eef2f7'; ctx.font='800 17px Pretendard,sans-serif';
+  ctx.fillStyle=CTRMAIN; ctx.font='800 17px Pretendard,sans-serif';
   ctx.fillText(t, x, y+7);
   ctx.restore();
 }};
@@ -933,7 +1055,7 @@ function drawCharts(C){
   /* ── 1) 보유 종목 수익 추이 + 포트폴리오 합성 곡선 ──
      AXK 로 총수익축(ax)과 가격축(axp)을 갈아끼운다.
      두 선의 격차가 곧 '분배금으로 빠져나간 몫'이다. */
-  const S = h => (h.r[AXK] && h.r[AXK].length) ? h.r[AXK] : h.r.ax;
+  const S = h => { const a=seriesOf(h.r,AXK); return (a&&a.length)?a:h.r.ax; };
   const withAx = C.H.filter(h=>Array.isArray(S(h)));
   if(withAx.length && AX.length){
     // 모든 보유 종목이 데이터를 가진 시점부터 그린다. 그래야 같은 출발선에서 비교된다.
@@ -958,63 +1080,161 @@ function drawCharts(C){
     });
     const cb=comp.find(v=>v!=null);
     ds.push({label:'내 포트폴리오', data:comp.map(v=>v==null||!cb?null:+(v/cb*100).toFixed(2)),
-      borderColor:'#fff', backgroundColor:'#fff', borderWidth:2.8, pointRadius:0, tension:.15});
+      borderColor:PFLINE, backgroundColor:PFLINE, borderWidth:2.8, pointRadius:0, tension:.15});
 
     if(CH1) CH1.destroy();
-    const yl = AXK==='ax' ? '총수익 지수 (시작=100)' : '주가 지수 (시작=100, 배당 제외)';
+    const yl = AXNAME[AXK] + ' 지수 (시작=100)';
     CH1=new Chart(document.getElementById('cp1'),{type:'line',
       data:{labels,datasets:ds},
       options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
         plugins:{legend:{labels:{boxWidth:10,usePointStyle:true,pointStyle:'line'}},
           tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y==null?'–':c.parsed.y.toFixed(1)}`}}},
-        scales:{x:{ticks:{maxTicksLimit:9},grid:{color:'#1e2532'}},
-                y:{title:{display:true,text:yl},grid:{color:'#1e2532'}}}}});
+        scales:{x:{ticks:{maxTicksLimit:9},grid:{color:GRID}},
+                y:{title:{display:true,text:yl},grid:{color:GRID}}}}});
 
     const cl=comp[comp.length-1], pr=(cl!=null&&cb)? (cl/cb-1)*100 : null;
 
-    /* 같은 구간의 총수익 vs 가격 격차 = 분배금 기여분. 숫자로 같이 보여준다. */
+    /* 세 정의를 같은 구간에서 한 번에 계산해 늘 함께 보여준다.
+       어느 축을 보고 있든 '분배금 몫'과 '재투자 복리 몫'이 각각 얼마인지 드러나야 한다. */
     let gapTxt='';
     const both = C.H.filter(h=>Array.isArray(h.r.ax)&&Array.isArray(h.r.axp));
     if(both.length){
-      const projA=k=>{
-        let v=0,ok=true;
+      const projA=mode=>{
+        let v=0, ok=true;
         both.forEach(h=>{
-          const a=h.r[k], last=a[a.length-1], cur=a[s0];
-          if(cur==null||!last){ok=false;return;}
+          const a=seriesOf(h.r,mode);
+          if(!a){ ok=false; return; }
+          const last=a[a.length-1], cur=a[s0];
+          if(cur==null||!last){ ok=false; return; }
           v += h.val*cur/last;
         });
         return ok? v : null;
       };
-      const b0=projA('ax'), p0=projA('axp');
       const now=both.reduce((s,h)=>s+h.val,0);
-      if(b0&&p0){
-        const trR=(now/b0-1)*100, pxR=(now/p0-1)*100;
-        gapTxt = ` 같은 구간에서 <b>총수익 ${trR>0?'+':''}${trR.toFixed(1)}%</b> vs <b>주가만 ${pxR>0?'+':''}${pxR.toFixed(1)}%</b>,
-                   격차 <b class="pos">${(trR-pxR).toFixed(1)}%p</b>가 분배금이 만들어낸 몫입니다.`;
+      const ret=mode=>{ const b=projA(mode); return b? (now/b-1)*100 : null; };
+      const rPx=ret('px'), rTr=ret('tr'), rDr=ret('drip');
+      const f=v=>`${v>0?'+':''}${v.toFixed(1)}%`;
+      if(rPx!=null&&rTr!=null&&rDr!=null){
+        gapTxt = `<br>같은 구간 세 정의 비교 &mdash;
+          <b>주가수익률 ${f(rPx)}</b> &rarr;
+          <b>총수익률(현금) ${f(rTr)}</b> &rarr;
+          <b>DRIP ${f(rDr)}</b>.
+          분배금이 더한 몫이 <b class="pos">${(rTr-rPx).toFixed(1)}%p</b>,
+          그 분배금을 다시 굴려서 얻은 복리 몫이 <b class="pos">${(rDr-rTr).toFixed(1)}%p</b>입니다.`;
       }
     }
-    document.getElementById('np1').innerHTML =
-      (AXK==='ax'
-        ? `분배금을 <b>재투자했다고 가정한 총수익</b> 곡선입니다.`
-        : `분배금을 뺀 <b>주가 자체의 궤적</b>입니다. 커버드콜은 이 선이 우하향하는 경우가 많은데, 그것이 곧 NAV 침식입니다.`)
+
+    const desc = {
+      tr:  `분배금을 <b>현금으로 받아 쌓아둔</b> 누적 수익입니다. 재투자하지 않았으므로 복리가 붙지 않습니다. 분배금을 생활비로 쓰는 경우 이 선이 실제 자산 궤적에 가깝습니다.`,
+      drip:`분배금을 받는 즉시 <b>같은 종목에 재투자</b>했다고 가정한 곡선입니다. 세금과 매매비용은 반영되지 않아 실제보다 낙관적입니다.`,
+      px:  `분배금을 뺀 <b>주가 자체의 궤적</b>입니다. 커버드콜은 이 선이 우하향하는 경우가 많은데, 그것이 곧 NAV 침식입니다.`
+    }[AXK];
+
+    document.getElementById('np1').innerHTML = desc
       + ` 시작 시점은 보유 종목 중 가장 늦게 상장한 종목(${labels[0]})에 맞췄습니다.
-       흰 선이 현재 보유 비중으로 합성한 포트폴리오이며, 이 구간 수익률은 <b>${pr==null?'–':(pr>0?'+':'')+pr.toFixed(1)+'%'}</b>입니다.${gapTxt}
-       <br>과거 비중이 지금과 같았다고 가정한 계산이라 실제 매매 이력과는 다릅니다. 환율은 현재값으로 고정했습니다.
-       국내 종목의 주가축은 야후 미수정 종가를 사용합니다.`;
+       흰 선이 현재 보유 비중으로 합성한 포트폴리오이며, 이 구간 수익률은 <b>${pr==null?'–':(pr>0?'+':'')+pr.toFixed(1)+'%'}</b>입니다.`
+      + gapTxt
+      + `<br>과거 비중이 지금과 같았다고 가정한 계산이라 실제 매매 이력과는 다릅니다. 환율은 현재값으로 고정했습니다.
+       총수익률(현금)은 조정종가와 미수정 종가의 차이에서 구간별 분배금을 역산해 누적한 값이며, 국내 종목은 두 시계열의 출처가 달라 오차가 있을 수 있습니다.`;
   }
+
+  /* ── 1-b) 보유 종목 NAV(원금) 추이 ──
+     cp1 이 '얼마를 벌었나'라면 이 차트는 '원금이 어디까지 왔나'다.
+     분배금을 제외한 주가 시계열(axp)만 쓰고 100 기준선을 함께 깐다.
+     기준선 아래로 내려간 종목은 분배금을 원금에서 꺼내 쓰고 있다는 뜻이다.
+     NAVK='own' 이면 종목마다 자기 데이터 시작점을 100 으로 잡아 상장 이후 누적 침식을 보고,
+     'common' 이면 모든 종목이 데이터를 가진 공통 시점으로 맞춰 같은 구간을 비교한다. */
+  (function(){
+    const P = h => Array.isArray(h.r.axp) && h.r.axp.length ? h.r.axp : null;
+    const hs = C.H.filter(h=>P(h));
+    if(!hs.length || !AX.length){ if(CH4){CH4.destroy(); CH4=null;} 
+      document.getElementById('np4').innerHTML='주가 시계열이 있는 보유 종목이 없습니다.'; return; }
+
+    const firstIdx = h => P(h).findIndex(v=>v!=null);
+    const common = Math.max(...hs.map(firstIdx));
+    const start  = NAVK==='common' ? common : Math.min(...hs.map(firstIdx));
+    const labels = AX.slice(start);
+
+    const ds = hs.map((h,i)=>{
+      const a=P(h);
+      const bi = NAVK==='common' ? common : firstIdx(h);
+      const base = a[bi];
+      return {label:(h.r.market==='US'?h.r.ticker:(h.r.name||'').slice(0,14)),
+        data:labels.map((_,j)=>{
+          const k=start+j;
+          if(k<bi) return null;
+          const v=a[k];
+          return (v==null||!base)?null:+(v/base*100).toFixed(2);
+        }),
+        borderColor:PAL[i%PAL.length], backgroundColor:PAL[i%PAL.length],
+        borderWidth:1.6, pointRadius:0, tension:.15, spanGaps:false};
+    });
+    ds.push({label:'원금 기준선 (100)', data:labels.map(()=>100),
+      borderColor:cssv('--tx3')||'#5f6b7d', borderWidth:1.2, borderDash:[5,4],
+      pointRadius:0, tension:0, fill:false});
+
+    if(CH4) CH4.destroy();
+    CH4=new Chart(document.getElementById('cp4'),{type:'line',
+      data:{labels,datasets:ds},
+      options:{maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+        plugins:{legend:{labels:{boxWidth:10,usePointStyle:true,pointStyle:'line'}},
+          tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y==null?'–':c.parsed.y.toFixed(1)}`}}},
+        scales:{x:{ticks:{maxTicksLimit:9},grid:{color:GRID}},
+                y:{title:{display:true,text:'주가 지수 (배당 제외, 기준=100)'},grid:{color:GRID}}}}});
+
+    /* 종목별 원금 변화 / 분배 기여 분해 */
+    const rowsTxt = hs.map(h=>{
+      const a=P(h), t=h.r.ax;
+      const bi = NAVK==='common' ? common : firstIdx(h);
+      const nb=a[bi], nl=a[a.length-1];
+      const nm = h.r.market==='US'?h.r.ticker:(h.r.name||'').slice(0,14);
+      if(nb==null||nl==null) return null;
+      const navC=(nl/nb-1)*100;
+      let divC=null;
+      if(Array.isArray(t)&&t[bi]!=null&&t[t.length-1]!=null){
+        divC=(t[t.length-1]/t[bi]-1)*100 - navC;
+      }
+      return {nm, navC, divC};
+    }).filter(Boolean).sort((x,y)=>x.navC-y.navC);
+
+    const fmt=v=>`${v>0?'+':''}${v.toFixed(1)}%`;
+    const li = rowsTxt.map(r=>
+      `${r.nm} <b class="${r.navC<0?'neg':'pos'}">${fmt(r.navC)}</b>` +
+      (r.divC==null?'':` <span style="opacity:.7">(분배 +${r.divC.toFixed(1)}%p)</span>`)
+    ).join(' &middot; ');
+
+    const eroded = rowsTxt.filter(r=>r.navC<0);
+    const worst  = rowsTxt[0];
+    let verdict='';
+    if(eroded.length){
+      verdict = ` 기준선 아래로 내려간 종목은 <b>${eroded.length}종</b>이며,
+        가장 깊은 쪽은 <b>${worst.nm} ${fmt(worst.navC)}</b>입니다.
+        분배금을 받아도 원금이 그만큼 줄었다면 실제로 늘어난 돈은 두 값을 합친 몫뿐입니다.`;
+    } else {
+      verdict = ` 현재 보유 종목은 모두 원금 기준선 위에 있습니다. 분배금이 원금을 갉아먹지 않고 있다는 뜻입니다.`;
+    }
+
+    document.getElementById('np4').innerHTML =
+      (NAVK==='own'
+        ? `종목마다 <b>자기 데이터 시작점</b>을 100 으로 잡아, 상장 이후 원금이 어디까지 왔는지를 봅니다. 선이 시작하는 위치가 종목마다 다릅니다.`
+        : `모든 보유 종목이 데이터를 가진 <b>공통 시점(${labels[0]})</b>을 100 으로 맞춰 같은 구간을 비교합니다.`)
+      + verdict
+      + `<br><b>원금 변화</b> ${li}`
+      + `<br>ETF NAV 의 과거 시계열은 공개되지 않아 <b>배당 제외 주가로 근사</b>했습니다. 국내 종목은 야후 미수정 종가, 미국 종목은 야후 <code>close</code> 입니다. 괴리율(주가 − NAV)은 반영되지 않았습니다.`;
+  })();
 
   /* ── 2) 향후 12개월 예상 분배금 ── */
   const cal=calendar(C);
   if(CH2) CH2.destroy();
   CH2=new Chart(document.getElementById('cp2'),{type:'bar',
     data:{labels:cal.labels,datasets:[
-      {label:'세전',backgroundColor:'#2f4a63',data:cal.gross.map(v=>Math.round(v)),borderRadius:4},
+      {label:'세전',backgroundColor:cssv('--divgross')||'#2f4a63',data:cal.gross.map(v=>Math.round(v)),borderRadius:4},
       {label:'세후',backgroundColor:'#5b9cf6',data:cal.net.map(v=>Math.round(v)),borderRadius:4}]},
     options:{maintainAspectRatio:false,
       plugins:{legend:{labels:{boxWidth:10}},
         tooltip:{callbacks:{label:c=>`${c.dataset.label} ${won(c.parsed.y)}`}}},
       scales:{x:{grid:{display:false}},
-              y:{title:{display:true,text:'원'},grid:{color:'#1e2532'},
+              y:{title:{display:true,text:'원'},grid:{color:GRID},
                  ticks:{callback:v=>(v/10000).toFixed(0)+'만'}}}}});
   document.getElementById('np2').innerHTML =
     `최근 12개월 실제 분배 실적(TTM)을 향후 12개월의 중립적 기준선으로 삼고, 종목별 지급 월 패턴에 맞춰 배분했습니다.
@@ -1039,7 +1259,7 @@ function drawCharts(C){
   if(CH3) CH3.destroy();
   CH3=new Chart(document.getElementById('cp3'),{type:'doughnut',
     data:{labels:plabels,datasets:[{data:pdata,backgroundColor:pcolors,
-      borderColor:'#141922',borderWidth:2,hoverOffset:6}]},
+      borderColor:PIEBORD,borderWidth:2,hoverOffset:6}]},
     options:{maintainAspectRatio:false,cutout:'62%',
       plugins:{legend:{position:'right',labels:{boxWidth:9,usePointStyle:true,pointStyle:'circle',font:{size:11},padding:9}},
         tooltip:{callbacks:{label:c=>`${c.label} ${won(c.parsed)} (${C.totVal?(c.parsed/C.totVal*100).toFixed(1):0}%)`}},
@@ -1087,6 +1307,30 @@ document.querySelectorAll('#pieseg button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#pieseg button').forEach(o=>o.classList.remove('on'));
   b.classList.add('on'); PIEK=b.dataset.pie; renderPF();
 });
+document.querySelectorAll('#navseg button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#navseg button').forEach(o=>o.classList.remove('on'));
+  b.classList.add('on'); NAVK=b.dataset.nav; renderPF();
+});
+
+/* ---------- 테마 전환 ---------- */
+function thLabel(t){
+  const b=document.getElementById('thbtn');
+  if(b) b.innerHTML = t==='light' ? '&#9789; 다크 모드' : '&#9788; 라이트 모드';
+}
+function setTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  try{ localStorage.setItem(THKEY, t); }catch(e){}
+  thLabel(t);
+  /* Chart.js는 CSS 변수를 읽지 못한다. 토큰을 다시 읽고 차트를 통째로 다시 그린다. */
+  applyChartTheme();
+  buildAnalysisCharts();
+  render();
+  renderPF();
+  setTimeout(resizeCharts, 60);
+}
+document.getElementById('thbtn').onclick = () =>
+  setTheme(document.documentElement.getAttribute('data-theme')==='light' ? 'dark' : 'light');
+thLabel(document.documentElement.getAttribute('data-theme') || 'dark');
 function addRow(pick, sorter){
   /* 이미 담은 종목은 건너뛴다. 같은 종목 두 줄이 생기면 비중 계산이 헷갈린다. */
   const held=new Set(PF.items.map(x=>x.id));
