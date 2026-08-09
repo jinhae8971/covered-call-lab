@@ -134,7 +134,8 @@ table.pf select{text-align:left}
       <span class="chip acct on" data-a="general">일반계좌</span>
       <span class="chip acct" data-a="pension">연금계좌</span>
       <span class="chip acct" data-a="isa">ISA</span>
-      <button class="btn" id="pfadd">＋ 종목 추가</button>
+      <button class="btn" id="pfadd">＋ 커버드콜 추가</button>
+      <button class="btn" id="pfaddbm">＋ 지수 추가</button>
       <button class="btn" id="pfexp">JSON 내보내기</button>
       <button class="btn" id="pfimp">불러오기</button>
       <input type="file" id="pffile" accept="application/json,.json" style="display:none">
@@ -511,6 +512,20 @@ const BYID= Object.fromEntries(R.map(r=>[r.id,r]));
 const OPTS= R.slice().sort((a,b)=>
   (a.market===b.market? String(a.name).localeCompare(String(b.name),'ko') : a.market==='US'?-1:1));
 
+/* 드롭다운 그룹. 49종을 한 줄로 늘어놓으면 SPY·QQQ 같은 코어를 찾을 수가 없다.
+   '대표 지수'를 맨 위로 올려 코어-새틀라이트 구성을 바로 짤 수 있게 한다. */
+const CORE=['SPY','VOO','QQQ','QQQM','DIA','IWM','VTI','SCHD'];  /* 코어 우선 노출 순서 */
+const byCore=(a,b)=>{
+  const i=CORE.indexOf(a.ticker), j=CORE.indexOf(b.ticker);
+  return (i<0?99:i)-(j<0?99:j);
+};
+const OPT_GROUPS=[
+  {label:'🇺🇸 미국 대표 지수', f:o=>o.market==='US'&&o.gen==='BM', s:byCore},
+  {label:'🇰🇷 국내 상장 지수', f:o=>o.market==='KR'&&o.gen==='BM'},
+  {label:'🇺🇸 미국 커버드콜',  f:o=>o.market==='US'&&o.gen!=='BM'},
+  {label:'🇰🇷 국내 커버드콜',  f:o=>o.market==='KR'&&o.gen!=='BM'},
+];
+
 /* ---------- 계좌 유형별 과세 ----------
    국내상장 ETF: 분배금·매매차익 모두 배당소득 15.4%
    해외상장 ETF: 분배금 15% 원천징수 / 양도차익 22%(연 250만원 기본공제)
@@ -616,10 +631,18 @@ function renderPF(){
   empty.style.display = C.H.length?'none':'';
   document.getElementById('pfcharts').style.display = C.H.length?'':'none';
 
+  const olabel=o=>{
+    let n=(o.name||'');
+    if(n.length>38) n=n.slice(0,37).replace(/[\s·(,]+$/,'')+'…';
+    return n+' ('+o.ticker+')';
+  };
   const sel=h=>`<select data-i="${h.idx}" data-f="id">`+
-    OPTS.map(o=>`<option value="${o.id}" ${o.id===h.it.id?'selected':''}>${
-      (o.market==='US'?'🇺🇸 ':'🇰🇷 ')+(o.name||'').slice(0,30)+(o.market==='US'?' ('+o.ticker+')':'')}</option>`).join('')+
-    '</select>';
+    OPT_GROUPS.map(g=>{
+      const list=OPTS.filter(g.f); if(g.s) list.sort(g.s);
+      if(!list.length) return '';
+      return `<optgroup label="${g.label}">`+list.map(o=>
+        `<option value="${o.id}" ${o.id===h.it.id?'selected':''}>${olabel(o)}</option>`).join('')+'</optgroup>';
+    }).join('')+'</select>';
 
   tb.innerHTML = C.H.map(h=>{
     const wNow = C.totVal? h.val/C.totVal*100 : 0;
@@ -629,7 +652,7 @@ function renderPF(){
     const bad  = C.A.krOnly && h.us;
     return `<tr>
       <td class="l" style="min-width:260px">${sel(h)}
-        <div class="hint">${h.r.gen==='BM'?'벤치마크(원지수)':GN[h.r.gen]} · 분배 ${h.r.sched?h.r.sched.freq:'–'} · 보수 ${h.r.er??'–'}%${
+        <div class="hint">${h.r.gen==='BM'?'대표 지수(커버드콜 아님)':GN[h.r.gen]} · 분배 ${h.r.sched?h.r.sched.freq:'–'} · 보수 ${h.r.er??'–'}%${
           bad?' · <span class="neg">이 계좌에 편입 불가</span>':''}</div></td>
       <td style="width:100px"><input type="number" step="any" min="0" data-i="${h.idx}" data-f="qty" value="${h.qty||''}"></td>
       <td style="width:110px"><input type="number" step="any" min="0" data-i="${h.idx}" data-f="avg" value="${h.avg||''}">
@@ -759,11 +782,17 @@ document.querySelector('#pftbl tbody').addEventListener('click',e=>{
 document.querySelectorAll('.chip.acct').forEach(c=>c.onclick=()=>{
   PF.acct=c.dataset.a; save(); renderPF();
 });
-document.getElementById('pfadd').onclick=()=>{
-  const first = OPTS.find(o=>o.gen!=='BM') || OPTS[0];
-  PF.items.push({id:first.id, qty:null, avg:null, target:null});
+function addRow(pick, sorter){
+  /* 이미 담은 종목은 건너뛴다. 같은 종목 두 줄이 생기면 비중 계산이 헷갈린다. */
+  const held=new Set(PF.items.map(x=>x.id));
+  const cand=OPTS.filter(pick); if(sorter) cand.sort(sorter);
+  const row=cand.find(o=>!held.has(o.id)) || cand[0];
+  if(!row){ alert('추가할 종목이 없습니다.'); return; }
+  PF.items.push({id:row.id, qty:null, avg:null, target:null});
   save(); renderPF();
-};
+}
+document.getElementById('pfadd').onclick   = ()=>addRow(o=>o.gen!=='BM');
+document.getElementById('pfaddbm').onclick = ()=>addRow(o=>o.gen==='BM', byCore);
 document.getElementById('pfclr').onclick=()=>{
   if(!PF.items.length) return;
   if(confirm('보유 내역을 모두 삭제할까요? 되돌릴 수 없습니다.')){
