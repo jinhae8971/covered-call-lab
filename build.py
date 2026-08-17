@@ -28,6 +28,8 @@ ROOT = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(ROOT, "data")
 UNIVERSE = os.path.join(ROOT, "universe.json")
 CACHE = os.path.join(DATA_DIR, "raw_cache.json")
+# 국내 ETF 회차별 분배 이력. 네이버는 TTM 합계만 주므로 야후에서 따로 받는다.
+KRDIV = os.path.join(DATA_DIR, "krdiv.json")
 METRICS = os.path.join(DATA_DIR, "metrics.json")
 OUT_HTML = os.path.join(ROOT, "dashboard.html")
 # GitHub Pages 는 디렉터리 진입 시 index.html 을 찾는다. 같은 내용을 두 벌 쓴다.
@@ -179,6 +181,7 @@ def compute_us(meta, raw):
         "spark": spark,
         "ccy": raw.get("currency", "USD"),
         "sched": _sched_from_history(dv, last_d, ttm_div, raw.get("currency", "USD")),
+        "divhist": _divhist(dv),
         "_tr": [(d.isoformat(), v) for d, v in _slice_from(tr, 365 * 3 + 40)],
         "_px": [(d.isoformat(), v) for d, v in _slice_from(px, 365 * 3 + 40)],
     }
@@ -206,6 +209,26 @@ def fetch_kr_unadjusted(code):
         out = [(dt.datetime.utcfromtimestamp(t).date().isoformat(), c)
                for t, c in zip(ts, close) if c]
         return out if len(out) >= 60 else None
+    except Exception:
+        return None
+
+
+def fetch_kr_dividends(code):
+    """국내 ETF의 회차별 분배 이력(기준일, 주당금액).
+
+    네이버 etfAnalysis 는 dividendPerShareTtm(합계)과 지급월 목록만 준다.
+    회차별 금액이 없으면 '분배금이 늘고 있는지 줄고 있는지'를 판정할 수 없다.
+    야후는 .KS 심볼에 대해 events=div 로 회차별 배당락일과 금액을 주므로 여기서 받는다.
+    실패해도 예외를 던지지 않는다. 없으면 기존 관행 규칙으로 되돌아간다.
+    """
+    now = int(time.time())
+    url = (f"https://query1.finance.yahoo.com/v8/finance/chart/{code}.KS"
+           f"?period1=0&period2={now}&interval=1d&events=div")
+    try:
+        res = http_json(url, tries=2, sleep=1.0)["chart"]["result"][0]
+        dv = (res.get("events") or {}).get("dividends") or {}
+        return sorted([dt.datetime.utcfromtimestamp(int(v["date"])).date().isoformat(),
+                       round(float(v["amount"]), 4)] for v in dv.values())
     except Exception:
         return None
 
@@ -318,12 +341,28 @@ def compute_kr(meta, raw):
         "tax": "배당소득세 15.4% · 매매차익도 배당소득 과세 · 금융소득종합과세 합산",
         "spark": [round(v, 2) for _, v in px[::max(1, len(px) // 120)]],
         "ccy": "KRW",
-        "sched": _sched_from_months(div.get("dividendMonthThisYear"),
-                                    div.get("dividendCountThisYear"), ttm_dps, "KRW", last_d),
+        "sched": _kr_sched(raw.get("dividends"), div, ttm_dps, last_d),
+        "divhist": _divhist([(d, a) for d, a in (raw.get("dividends") or [])]),
         "_tr": [(d.isoformat(), v) for d, v in _slice_from(px, 365 * 3 + 40)],
         "_px": _kr_px_series(raw.get("price_unadj"), px),
         "px_src": "야후 미수정 종가" if raw.get("price_unadj") else "가격축 없음(총수익축 대체)",
     }
+
+
+def _divhist(dv, years=3, cap=170):
+    """최근 3년 분배 이력. 화면의 '주당 분배금 추이' 판정 근거다.
+
+    회차 수가 아니라 기간으로 자르는 이유: 주간 배당(QDTE·YMAX 등)을 26회로 자르면
+    반년치밖에 남지 않아 전년 대비 비교가 불가능해진다. 기간을 고정해야
+    주간·월간·분기 종목을 같은 잣대로 볼 수 있다. cap 은 HTML 비대화 방지용이다.
+    """
+    if not dv:
+        return []
+    norm = [(d if isinstance(d, dt.date) else dt.date.fromisoformat(d), float(a))
+            for d, a in dv]
+    cut = norm[-1][0] - dt.timedelta(days=365 * years + 10)
+    keep = [(d, a) for d, a in norm if d > cut][-cap:]
+    return [[d.isoformat(), round(a, 4)] for d, a in keep]
 
 
 # ══════════════════════════════════════════════ 분배 스케줄 · 공통 축
@@ -352,6 +391,39 @@ def _sched_from_history(dv, last_d, ttm_total, ccy):
             "pays": n, "freq": freq, "basis": "실제 분배 이력(TTM)",
             "exdates": ex, "last_ex": ex[-1] if ex else None,
             "anchor": "exdate", "paylag": 3}
+
+
+def _kr_sched(divs, div_meta, ttm_dps, last_d):
+    """국내 ETF 분배 스케줄.
+
+    1순위: 야후의 실제 분배기준일 이력. 지급일 추정 오차가 관행 규칙보다 작다.
+    2순위: 네이버 지급월 패턴 + 국내 관행(지급월 말 영업일 기준 · 2영업일 내 지급).
+
+    다만 야후의 국내 ETF 배당 데이터는 누락 회차가 있는 경우가 관측된다.
+    그래서 야후 TTM 합계가 네이버 dividendPerShareTtm 과 25% 넘게 어긋나면
+    이력을 신뢰하지 않고 규칙으로 되돌린다. 틀린 정밀도보다 정직한 근사가 낫다.
+    """
+    fallback = _sched_from_months(div_meta.get("dividendMonthThisYear"),
+                                  div_meta.get("dividendCountThisYear"),
+                                  ttm_dps, "KRW", last_d)
+    if not divs:
+        return fallback
+    dv = [(dt.date.fromisoformat(d), float(a)) for d, a in divs]
+    ttm = [(d, a) for d, a in dv if d > last_d - dt.timedelta(days=365)]
+    y_ttm = sum(a for _, a in ttm)
+    if not ttm or not ttm_dps or not y_ttm:
+        return fallback
+    if abs(y_ttm - float(ttm_dps)) / float(ttm_dps) > 0.25:
+        return fallback
+    sc = _sched_from_history(dv, last_d, y_ttm, "KRW")
+    if not sc:
+        return fallback
+    # 야후가 주는 날짜는 배당락일이다. 국내 ETF 는 통상 배당락 다음 영업일이 기준일이고
+    # 지급은 기준일로부터 2영업일 안이다. 합쳐 영업일 3일로 둔다.
+    sc.update({"paylag": 3, "basis": "실제 분배 이력(TTM · 야후)",
+               "annual": round(float(ttm_dps), 2),
+               "src_note": "네이버 TTM 합계로 금액을 맞추고, 날짜는 야후 실적 기준일을 썼습니다."})
+    return sc
 
 
 def _sched_from_months(month_csv, count, ttm_dps, ccy, asof):
@@ -551,11 +623,23 @@ def main():
     if not args.only_us:
         jobs += [("KR", m, "KR:" + m["code"], fetch_kr, compute_kr, m["code"]) for m in uni["kr"]]
 
+    krdiv = {}
+    if os.path.exists(KRDIV):
+        try:
+            krdiv = json.load(open(KRDIV, encoding="utf-8"))
+        except Exception:
+            krdiv = {}
+
     for market, meta, key, fetch, compute, ident in jobs:
         try:
             if key not in cache:
                 cache[key] = fetch(ident)
                 time.sleep(0.35)
+            if market == "KR":
+                if ident not in krdiv:
+                    krdiv[ident] = fetch_kr_dividends(ident) or []
+                    time.sleep(0.2)
+                cache[key]["dividends"] = krdiv.get(ident) or []
             rows.append(compute(meta, cache[key]))
             print(f"  OK  {ident:8s} {meta.get('name','')[:38]}")
         except Exception as e:
@@ -564,6 +648,7 @@ def main():
             print(f"  ERR {ident:8s} {e}")
 
     json.dump(cache, open(CACHE, "w", encoding="utf-8"), ensure_ascii=False)
+    json.dump(krdiv, open(KRDIV, "w", encoding="utf-8"), ensure_ascii=False)
     rows = score(attach_benchmark(rows))
     axis = build_axis(rows)
     fx = cache.get("FX:USDKRW") if args.cache else None
