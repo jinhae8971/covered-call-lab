@@ -4,6 +4,16 @@ on:
   schedule:
     # 매주 토요일 08:00 KST = 금요일 23:00 UTC (KST = UTC+9)
     - cron: "0 23 * * 5"
+  # Pages 는 브랜치가 아니라 이 워크플로우의 아티팩트로 배포된다.
+  # 그래서 push 트리거가 없으면 main 에 올려도 화면이 바뀌지 않는다.
+  # push 이벤트에서는 데이터 수집·되커밋을 건너뛰고 배포만 한다.
+  push:
+    branches: [main]
+    paths:
+      - index.html
+      - dashboard.html
+      - data/metrics.json
+      - .github/workflows/update-dashboard.yml
   workflow_dispatch:
     inputs:
       scope:
@@ -57,8 +67,11 @@ jobs:
           esac
           echo "flag=$FLAG" >> "$GITHUB_OUTPUT"
 
+      # push 이벤트는 이미 커밋된 산출물을 그대로 배포하는 경로다.
+      # 여기서 다시 빌드하면 봇 커밋 -> push -> 재빌드 루프가 생긴다.
       - name: 데이터 수집 및 대시보드 빌드
         id: build
+        if: github.event_name != 'push'
         continue-on-error: true
         run: python build.py ${{ steps.scope.outputs.flag }}
 
@@ -66,6 +79,7 @@ jobs:
       # 그 결과를 그대로 커밋하면 정상 데이터가 빈 데이터로 덮인다. 임계치로 방어한다.
       - name: 데이터 품질 게이트
         id: gate
+        if: github.event_name != 'push'
         run: |
           python - <<'PY'
           import json, os, sys
@@ -90,6 +104,7 @@ jobs:
         run: git checkout -- . || true
 
       - name: 갱신분 커밋
+        if: github.event_name != 'push'
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
