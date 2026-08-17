@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="2f5afd2b-66d2-4608-8faf-6ae23c1c68ab"></script>
+</head>
+<body>
+<x-dc>
+
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root, html[data-theme="dark"]{
+  --bg:#080b10; --side1:#0d1219; --side2:#080b10;
+  --surface:#111721; --surface2:#171e2b; --surface3:#1f2837;
+  --line:#212a38; --line2:#303c4e; --grid:#1b2230;
+  --tx:#eaeff6; --tx2:#94a2b6; --tx3:#78869d;
+  --acc:#5b9cf6; --acc2:#7c6cf0; --onacc:#08111f;
+  --pos:#2fbe74; --neg:#ff6060; --warn:#e5a92b;
+  --wash:rgba(91,156,246,.10);
+  --alertbg:rgba(229,169,43,.14); --alertln:rgba(229,169,43,.45);
+  --negwash:rgba(255,96,96,.10);
+  --r:14px; --r2:9px; --r3:6px;
+  --shadow:0 1px 0 rgba(255,255,255,.025), 0 14px 30px -24px #000;
+}
+html[data-theme="light"]{
+  --bg:#f2f5f9; --side1:#ffffff; --side2:#f2f5f9;
+  --surface:#ffffff; --surface2:#f5f8fc; --surface3:#e8eef6;
+  --line:#dde4ee; --line2:#c3cedd; --grid:#e9eef5;
+  --tx:#101825; --tx2:#4c5a6e; --tx3:#64728a;
+  --acc:#1d5fd6; --acc2:#5b3fe0; --onacc:#ffffff;
+  --pos:#0a8f4d; --neg:#cf2318; --warn:#8f5405;
+  --wash:rgba(29,95,214,.07);
+  --alertbg:rgba(143,84,5,.10); --alertln:rgba(143,84,5,.34);
+  --negwash:rgba(207,35,24,.07);
+  --shadow:0 1px 2px rgba(16,24,40,.05), 0 10px 24px -18px rgba(16,24,40,.35);
+}
+:root{
+  --g1:#e0559b; --g2:#9a6ae8; --g3:#4b8ef0; --g4:#22c1c3;
+  --bm:#8b95a5; --bd:#6f9469; --cm:#b8934a; --lv:#f2683c;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--tx);
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  font-variant-numeric:tabular-nums; -webkit-font-smoothing:antialiased;
+  font-size:14px; line-height:1.5;
+}
+a{color:var(--acc);text-decoration:none}
+a:hover{color:var(--acc2)}
+button{font-family:inherit;font-variant-numeric:tabular-nums}
+input{font-family:inherit;font-variant-numeric:tabular-nums}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:6px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+@keyframes ccl-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+</style>
+<script src="7f346127-e67e-4eb2-bb86-756b2a822d79"></script>
+</helmet>
+
+<div style="display:flex;align-items:stretch;min-height:100vh;background:var(--bg)">
+
+  <aside style="width:246px;flex:0 0 246px;position:sticky;top:0;align-self:flex-start;height:100vh;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--side1),var(--side2));border-right:1px solid var(--line);padding:22px 16px 16px">
+    <div style="display:flex;align-items:center;gap:11px;padding:0 6px 20px">
+      <div style="width:34px;height:34px;flex:0 0 34px;border-radius:10px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;letter-spacing:-.4px">FL</div>
+      <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+        <div style="font-size:14.5px;font-weight:700;letter-spacing:-.2px">경제적자유 랩</div>
+        <div style="font-size:11px;color:var(--tx3);letter-spacing:.1px">총수익률 우선 리서치</div>
+      </div>
+    </div>
+
+    <nav style="display:flex;flex-direction:column;gap:3px">
+      <button sc-camel-on-click="{{ goResearch }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:9px 11px;border:0;border-radius:var(--r2);font-size:13.5px;font-weight:600;cursor:pointer;{{ tabResearchSx }}">
+        <span>ETF 분석</span>
+        <span style="font-size:11px;font-weight:600;opacity:.62">{{ ccCount }}종</span>
+      </button>
+      <div hidden="{{ hideResearchSub }}" style="display:flex;flex-direction:column;gap:1px;padding:4px 0 8px 11px;margin-left:5px;border-left:1px solid var(--line)">
+        <a href="#s-gen" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">세대별 계보</a>
+        <a href="#s-tbl" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">종목 비교</a>
+        <a href="#s-chart" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">구조 차트</a>
+        <a href="#s-ins" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">결론</a>
+        <a href="#s-tax" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">세금 구조</a>
+      </div>
+
+      <button sc-camel-on-click="{{ goPortfolio }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;text-align:left;padding:9px 11px;border:0;border-radius:var(--r2);font-size:13.5px;font-weight:600;cursor:pointer;{{ tabPortfolioSx }}">
+        <span>내 포트폴리오</span>
+        <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;{{ sideAlertSx }}">{{ sideAlertTxt }}</span>
+      </button>
+      <div hidden="{{ hidePortfolioSub }}" style="display:flex;flex-direction:column;gap:1px;padding:4px 0 8px 11px;margin-left:5px;border-left:1px solid var(--line)">
+        <a href="#s-month" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">이번 달 분배금</a>
+        <a href="#s-div" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">분배금 추세</a>
+        <a href="#s-hold" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">보유 현황</a>
+        <a href="#s-trend" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">수익 추이</a>
+        <a href="#s-nav" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">NAV 추이</a>
+        <a href="#s-alloc" style="padding:5px 10px;font-size:12.5px;color:var(--tx2);border-radius:var(--r3)" style-hover="background:var(--surface2);color:var(--tx)">현재 비중</a>
+      </div>
+    </nav>
+
+    <div style="flex:1 1 auto"></div>
+
+    <button id="thbtn" sc-camel-on-click="{{ toggleTheme }}" style="display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:9px 11px;margin-bottom:14px;background:transparent;color:var(--tx2);border:1px solid var(--line);border-radius:var(--r2);font-size:12.5px;font-weight:600;cursor:pointer;text-align:left" style-hover="border-color:var(--line2);color:var(--tx)">
+      <span>{{ themeLabel }}</span>
+      <span style="font-size:11px;color:var(--tx3)">{{ themeHint }}</span>
+    </button>
+
+    <div style="display:flex;flex-direction:column;gap:7px;padding:14px 11px 4px;border-top:1px solid var(--line)">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px"><span style="color:var(--tx3)">갱신</span><span id="gen" style="color:var(--tx2);font-weight:600">2026-08-17 06:07</span></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px"><span style="color:var(--tx3)">수록 종목</span><span id="cnt" style="color:var(--tx2);font-weight:600">{{ cntTxt }}</span></div>
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:11.5px"><span style="color:var(--tx3)">USD/KRW</span><span id="fxm" style="color:var(--tx2);font-weight:600">1,415.7</span></div>
+    </div>
+  </aside>
+
+  <main style="flex:1 1 auto;min-width:0;padding:30px 32px 60px;max-width:1420px">
+
+    <section id="pane-research" data-screen-label="분석" hidden="{{ hideResearch }}">
+      <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:22px">
+        <div style="max-width:720px">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:1.3px;color:var(--tx3);padding-bottom:8px">ETF 분석</div>
+          <h1 style="margin:0;font-size:29px;line-height:1.24;font-weight:750;letter-spacing:-.7px;text-wrap:pretty">분배율이 아니라 총수익률.<br>절대수익이 아니라 원지수 대비 초과수익.</h1>
+          <p style="margin:11px 0 0;font-size:13.5px;line-height:1.62;color:var(--tx2);max-width:640px;text-wrap:pretty">커버드콜 ETF는 분배율만 보면 반드시 틀립니다. 연 12%를 받으면서 주가가 15% 깎이면 원금을 나눠 받으며 세금까지 내는 것입니다. 이 화면의 모든 정렬 기준은 총수익과 초과수익입니다.</p>
+        </div>
+      </header>
+
+      <div id="kpis" style="display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding-bottom:26px">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px">
+          <div style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 22px 18px;position:relative;overflow:hidden">
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px">
+              <span style="font-size:11.5px;font-weight:700;letter-spacing:.6px;color:var(--tx2)">평균 초과수익 1년</span>
+              <span style="font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--onacc);background:var(--acc);padding:2px 6px;border-radius:4px">1순위</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <div style="font-size:46px;line-height:1;font-weight:760;letter-spacing:-2px;{{ kExSx }}">{{ kEx }}</div>
+              <div style="font-size:13px;color:var(--tx3);font-weight:600">%p</div>
+            </div>
+            <div style="font-size:12px;line-height:1.55;color:var(--tx2);padding-top:11px;max-width:340px">커버드콜 {{ ccCount }}종 평균이 각자의 원지수를 이만큼 밑돌았습니다. 이 값이 0을 넘지 못하면 원지수를 그냥 사는 것이 낫습니다.</div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 22px 18px">
+            <div style="display:flex;align-items:center;gap:8px;padding-bottom:10px">
+              <span style="font-size:11.5px;font-weight:700;letter-spacing:.6px;color:var(--tx2)">평균 총수익 1년</span>
+              <span style="font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--tx2);border:1px solid var(--line2);padding:2px 6px;border-radius:4px">2순위</span>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:10px">
+              <div style="font-size:46px;line-height:1;font-weight:760;letter-spacing:-2px;{{ kTrSx }}">{{ kTr }}</div>
+              <div style="font-size:13px;color:var(--tx3);font-weight:600">%</div>
+            </div>
+            <div style="font-size:12px;line-height:1.55;color:var(--tx2);padding-top:11px;max-width:340px">분배금을 재투자했다고 가정한 실제 수익. 통장에 들어온 금액이 아니라 자산이 실제로 늘어난 몫입니다.</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;padding:2px 2px 0">
+          <span style="font-size:11px;font-weight:700;letter-spacing:1px;color:var(--tx3)">참고 지표</span>
+          <span style="flex:1 1 auto;height:1px;background:var(--line)"></span>
+          <span style="font-size:11px;color:var(--tx3)">지수·채권·원자재·레버리지는 평균에서 제외</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">
+          <div style="border:1px solid var(--line);border-radius:var(--r2);padding:13px 14px">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:6px">평균 분배율 TTM</div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.5px;color:var(--tx2)">{{ kY }}%</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">순위 근거로 쓰지 않음</div>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:var(--r2);padding:13px 14px">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:6px">평균 상승참여율</div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.5px">{{ kCap }}%</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">원지수 상승분 중 따라간 비율</div>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:var(--r2);padding:13px 14px">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:6px">평균 낙폭방어폭</div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.5px">{{ kEdge }}%p</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">원지수 MDD 대비 덜 빠진 폭</div>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:var(--r2);padding:13px 14px">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:6px">평균 상장후 주가</div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.5px;{{ kPxSx }}">{{ kPx }}%</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">NAV 침식 대용치</div>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:var(--r2);padding:13px 14px">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:6px">평균 MDD 1년</div>
+            <div style="font-size:20px;font-weight:700;letter-spacing:-.5px;color:var(--neg)">{{ kMdd }}%</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">최대 고점 대비 하락</div>
+          </div>
+        </div>
+      </div>
+
+      <section id="s-gen" style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 24px 24px;margin-bottom:16px">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding-bottom:6px">
+          <div>
+            <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.35px">세대별 계보</h2>
+            <p style="margin:6px 0 0;font-size:12.5px;color:var(--tx2)">세대마다 무엇을 고치려 했고, 초과수익이 실제로 나아졌는지</p>
+          </div>
+          <div style="font-size:11.5px;color:var(--tx3);text-align:right;max-width:300px;line-height:1.5">막대 = 세대 평균 초과수익 1년<br>선이 아래로 꺾이면 그 세대는 후퇴한 것</div>
+        </div>
+
+        <div id="genrow" style="padding:6px 0 4px">
+          <div style="position:relative;height:132px">
+            <div style="position:absolute;left:0;right:0;top:18px;height:1px;background:var(--line2);opacity:.75"></div>
+            <div style="position:absolute;left:2px;top:2px;font-size:9.5px;font-weight:700;letter-spacing:.3px;color:var(--tx3)">0 = 원지수와 동일</div>
+            <svg sc-camel-view-box="0 0 400 132" sc-camel-preserve-aspect-ratio="none" style="position:absolute;left:0;top:0;width:100%;height:132px;pointer-events:none">
+              <polyline points="{{ spinePts }}" fill="none" stroke="var(--tx3)" stroke-width="1.6" stroke-dasharray="5 4" vector-effect="non-scaling-stroke"></polyline>
+            </svg>
+            <div style="position:absolute;left:0;top:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))">
+              <sc-for list="{{ spineBars }}" as="b" hint-placeholder-count="4">
+                <div style="position:relative">
+                  <div style="position:absolute;left:50%;margin-left:-21px;top:18px;width:42px;height:{{ b.h }}">
+                    <div style="width:100%;height:100%;border-radius:0 0 4px 4px;opacity:.9;background:{{ b.color }}"></div>
+                  </div>
+                  <div style="position:absolute;left:0;right:0;top:106px;text-align:center;font-size:12.5px;font-weight:750;letter-spacing:-.2px">{{ b.txt }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;padding-top:4px">
+            <sc-for list="{{ gens }}" as="g" hint-placeholder-count="4">
+              <div style="padding:14px 16px 4px;border-left:1px solid var(--line)">
+                <div style="display:flex;align-items:center;gap:8px;padding-bottom:9px">
+                  <span style="width:9px;height:9px;border-radius:50%;background:{{ g.color }}"></span>
+                  <span style="font-size:13px;font-weight:750;letter-spacing:-.2px">{{ g.label }}</span>
+                  <span style="font-size:11px;color:var(--tx3)">{{ g.cnt }}종</span>
+                </div>
+                <div style="font-size:13.5px;font-weight:650;letter-spacing:-.2px;padding-bottom:7px">{{ g.name }}</div>
+                <p style="margin:0;font-size:12px;line-height:1.62;color:var(--tx2);text-wrap:pretty;min-height:76px">{{ g.thesis }}</p>
+                <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 10px;padding-top:11px;border-top:1px solid var(--line);margin-top:9px">
+                  <div>
+                    <div style="font-size:10.5px;color:var(--tx3)">총수익 1Y</div>
+                    <div style="font-size:14px;font-weight:700;{{ g.trSx }}">{{ g.trTxt }}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10.5px;color:var(--tx3)">초과수익 1Y</div>
+                    <div style="font-size:14px;font-weight:700;{{ g.exSx }}">{{ g.exTxt }}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10.5px;color:var(--tx3)">분배율 TTM</div>
+                    <div style="font-size:14px;font-weight:600;color:var(--tx2)">{{ g.yTxt }}</div>
+                  </div>
+                  <div>
+                    <div style="font-size:10.5px;color:var(--tx3)">상장후 주가</div>
+                    <div style="font-size:14px;font-weight:600;{{ g.pxSx }}">{{ g.pxTxt }}</div>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div id="genrow2" style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:18px;padding:13px 16px;background:var(--surface2);border-radius:var(--r2)">
+          <span style="font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--tx3);padding-right:4px">자산배분 축</span>
+          <sc-for list="{{ axes }}" as="a" hint-placeholder-count="4">
+            <span style="display:inline-flex;align-items:center;gap:7px;padding:5px 11px 5px 8px;border:1px solid var(--line2);border-radius:20px;font-size:12px">
+              <span style="width:8px;height:8px;border-radius:50%;background:{{ a.color }}"></span>
+              <span style="font-weight:650">{{ a.label }}</span>
+              <span style="color:var(--tx3)">{{ a.cnt }}종 · 총수익 {{ a.trTxt }}</span>
+            </span>
+          </sc-for>
+          <span style="flex:1 1 100%;font-size:11.5px;color:var(--tx3);padding-top:2px">옵션을 매도하지 않는 자산이므로 커버드콜과 같은 자로 재지 않습니다. 종합점수·초과수익·참여율은 계산하지 않습니다.</span>
+        </div>
+      </section>
+
+      <section id="s-tbl" style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden">
+        <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding:22px 24px 16px">
+          <div>
+            <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.35px">종목 비교</h2>
+            <p style="margin:6px 0 0;font-size:12.5px;color:var(--tx2)">핵심 4열로 줄을 세우고, 행을 열면 남은 12열이 펼쳐집니다</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <input id="q" value="{{ q }}" sc-camel-on-input="{{ onSearch }}" placeholder="종목·티커 검색" style="width:190px;padding:8px 12px;background:var(--surface2);color:var(--tx);border:1px solid var(--line);border-radius:var(--r2);font-size:12.5px;outline:none" style-focus="border-color:var(--acc)">
+            <button sc-camel-on-click="{{ toggleAll }}" style="padding:8px 13px;background:transparent;color:var(--tx2);border:1px solid var(--line2);border-radius:var(--r2);font-size:12.5px;font-weight:600;cursor:pointer" style-hover="color:var(--tx);border-color:var(--tx3)">{{ allLabel }}</button>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:18px;padding:0 24px 16px">
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--tx3)">시장</span>
+            <sc-for list="{{ mktChips }}" as="c" hint-placeholder-count="3">
+              <button sc-camel-on-click="{{ c.on }}" style="padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--line2);{{ c.sx }}">{{ c.label }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:7px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--tx3)">분류</span>
+            <sc-for list="{{ genChips }}" as="c" hint-placeholder-count="4">
+              <button sc-camel-on-click="{{ c.on }}" style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--line2);{{ c.sx }}">{{ c.label }}</button>
+            </sc-for>
+          </div>
+          <div style="margin-left:auto;font-size:11.5px;color:var(--tx3)">{{ shownTxt }}</div>
+        </div>
+
+        <div style="overflow-x:auto;border-top:1px solid var(--line)">
+          <div id="tbl" style="min-width:840px">
+            <div style="display:grid;grid-template-columns:minmax(210px,1.5fr) 116px 118px 104px 112px 104px 38px;align-items:end;gap:0;background:var(--surface2);border-bottom:1px solid var(--line2);position:sticky;top:0;z-index:3">
+              <button sc-camel-on-click="{{ sortT }}" style="text-align:left;padding:12px 16px;background:transparent;border:0;border-right:1px solid var(--line);cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--tx2)" style-hover="color:var(--tx)">종목 {{ arrT }}</button>
+              <button sc-camel-on-click="{{ sortSc }}" style="text-align:right;padding:12px 14px;background:transparent;border:0;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--tx)" style-hover="color:var(--acc)">종합점수 {{ arrSc }}</button>
+              <button sc-camel-on-click="{{ sortEx }}" style="text-align:right;padding:12px 14px;background:transparent;border:0;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--tx)" style-hover="color:var(--acc)">초과수익 1Y {{ arrEx }}</button>
+              <button sc-camel-on-click="{{ sortTr }}" style="text-align:right;padding:12px 14px;background:transparent;border:0;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--tx)" style-hover="color:var(--acc)">총수익 1Y {{ arrTr }}</button>
+              <button sc-camel-on-click="{{ sortEdge }}" style="text-align:right;padding:12px 14px;background:transparent;border:0;cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--tx)" style-hover="color:var(--acc)">낙폭방어폭 {{ arrEdge }}</button>
+              <button sc-camel-on-click="{{ sortY }}" style="text-align:right;padding:12px 14px;background:transparent;border:0;border-left:1px solid var(--line);cursor:pointer;font-size:10.5px;font-weight:600;letter-spacing:.4px;color:var(--tx3)" style-hover="color:var(--tx2)">분배율 참고 {{ arrY }}</button>
+              <span style="padding:12px 0"></span>
+            </div>
+
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="10">
+              <div style="border-bottom:1px solid var(--line);{{ r.wrapSx }}">
+                <div sc-camel-on-click="{{ r.on }}" style="display:grid;grid-template-columns:minmax(210px,1.5fr) 116px 118px 104px 112px 104px 38px;align-items:center;gap:0;cursor:pointer" style-hover="background:var(--wash)">
+                  <div style="display:flex;align-items:center;gap:10px;padding:11px 16px;min-width:0">
+                    <span style="width:9px;height:9px;flex:0 0 9px;border-radius:50%;background:{{ r.color }}"></span>
+                    <div style="min-width:0">
+                      <div style="display:flex;align-items:center;gap:7px">
+                        <span style="font-size:13.5px;font-weight:700;letter-spacing:-.2px">{{ r.t }}</span>
+                        <span style="font-size:9.5px;font-weight:700;letter-spacing:.4px;color:var(--tx3);border:1px solid var(--line2);padding:1px 4px;border-radius:3px">{{ r.mkt }}</span>
+                        <span style="font-size:10px;font-weight:700;color:var(--tx3)">{{ r.gen }}</span>
+                      </div>
+                      <div style="font-size:11px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px">{{ r.n }}</div>
+                    </div>
+                  </div>
+                  <div style="padding:11px 14px;text-align:right">
+                    <div style="font-size:15px;font-weight:750;letter-spacing:-.3px;{{ r.scSx }}">{{ r.scTxt }}</div>
+                    <div style="height:4px;border-radius:2px;background:var(--surface3);margin-top:5px;overflow:hidden">
+                      <div style="height:4px;border-radius:2px;background:{{ r.color }};width:{{ r.scW }}"></div>
+                    </div>
+                  </div>
+                  <div style="padding:11px 14px;text-align:right">
+                    <div style="font-size:15px;font-weight:700;letter-spacing:-.3px;{{ r.exSx }}">{{ r.exTxt }}</div>
+                    <div style="font-size:10px;color:var(--tx3);padding-top:3px">vs {{ r.bm }}</div>
+                  </div>
+                  <div style="padding:11px 14px;text-align:right;font-size:14px;font-weight:650;{{ r.trSx }}">{{ r.trTxt }}</div>
+                  <div style="padding:11px 14px;text-align:right;font-size:14px;font-weight:600;{{ r.edgeSx }}">{{ r.edgeTxt }}</div>
+                  <div style="padding:11px 14px;text-align:right;font-size:12.5px;font-weight:500;color:var(--tx3);border-left:1px solid var(--line)">{{ r.yTxt }}</div>
+                  <div style="padding:11px 12px 11px 0;text-align:right;font-size:11px;color:var(--tx3);{{ r.chevSx }}">▾</div>
+                </div>
+
+                <div hidden="{{ r.closed }}" style="background:var(--surface2);border-top:1px solid var(--line);padding:16px 20px 18px">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px 26px">
+                    <div>
+                      <div style="font-size:10.5px;font-weight:700;letter-spacing:.7px;color:var(--tx3);padding-bottom:9px;border-bottom:1px solid var(--line)">장기 수익</div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">총수익 3Y (연)</span><span style="font-weight:650">{{ r.tr3Txt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">총수익 상장후 (연)</span><span style="font-weight:650">{{ r.trsiTxt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">주가변화 상장후</span><span style="font-weight:650;{{ r.pxsiSx }}">{{ r.pxsiTxt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">주가변화 1Y</span><span style="font-weight:650;{{ r.px1Sx }}">{{ r.px1Txt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">주당분배금 TTM</span><span style="font-weight:650">{{ r.dpsTxt }}</span></div>
+                    </div>
+                    <div>
+                      <div style="font-size:10.5px;font-weight:700;letter-spacing:.7px;color:var(--tx3);padding-bottom:9px;border-bottom:1px solid var(--line)">위험</div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">MDD 1Y</span><span style="font-weight:650;color:var(--neg)">{{ r.mdd1Txt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">MDD 전기간</span><span style="font-weight:650;color:var(--neg)">{{ r.mddsiTxt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">변동성 1Y</span><span style="font-weight:650">{{ r.volTxt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">Calmar 1Y</span><span style="font-weight:650">{{ r.calTxt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">상승참여율</span><span style="font-weight:650">{{ r.capTxt }}</span></div>
+                    </div>
+                    <div>
+                      <div style="font-size:10.5px;font-weight:700;letter-spacing:.7px;color:var(--tx3);padding-bottom:9px;border-bottom:1px solid var(--line)">비용 · 식별</div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">총보수</span><span style="font-weight:650">{{ r.erTxt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">비교 원지수</span><span style="font-weight:650">{{ r.bm }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">시장 · 통화</span><span style="font-weight:650">{{ r.mktCcy }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">연 지급 횟수</span><span style="font-weight:650">{{ r.pcTxt }}</span></div>
+                      <div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font-size:12.5px"><span style="color:var(--tx2)">현재가</span><span style="font-weight:650">{{ r.pxTxt }}</span></div>
+                    </div>
+                  </div>
+                  <p style="margin:14px 0 0;padding:11px 14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2);font-size:12.5px;line-height:1.6;color:var(--tx2);text-wrap:pretty">{{ r.verdict }}</p>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--line2);background:var(--surface2)">
+          <button sc-camel-on-click="{{ toggleMethod }}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;padding:13px 24px;background:transparent;border:0;cursor:pointer;text-align:left">
+            <span style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:12.5px;font-weight:700;color:var(--tx)">방법론과 출처</span>
+              <span style="font-size:11.5px;color:var(--tx3)">종합점수 가중치 · 초과수익 정의 · 데이터 신뢰도</span>
+            </span>
+            <span style="font-size:11px;color:var(--tx3);font-weight:600">{{ methodLabel }}</span>
+          </button>
+          <div hidden="{{ methodClosed }}" style="padding:2px 24px 22px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px 26px">
+              <div style="padding:14px 16px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2)">
+                <div style="font-size:12px;font-weight:700;padding-bottom:6px">종합점수 = 백분위 가중합</div>
+                <div style="display:flex;flex-direction:column;gap:5px;padding-top:4px">
+                  <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:96px;color:var(--tx2)">초과수익 1Y</span><span style="flex:1 1 auto;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden"><span style="display:block;height:5px;background:var(--acc);width:100%"></span></span><span style="width:30px;text-align:right;font-weight:700">40%</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:96px;color:var(--tx2)">낙폭방어폭</span><span style="flex:1 1 auto;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden"><span style="display:block;height:5px;background:var(--acc);width:50%"></span></span><span style="width:30px;text-align:right;font-weight:700">20%</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:96px;color:var(--tx2)">총수익 1Y</span><span style="flex:1 1 auto;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden"><span style="display:block;height:5px;background:var(--acc);width:37.5%"></span></span><span style="width:30px;text-align:right;font-weight:700">15%</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:96px;color:var(--tx3)">분배율 TTM</span><span style="flex:1 1 auto;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden"><span style="display:block;height:5px;background:var(--tx3);width:37.5%"></span></span><span style="width:30px;text-align:right;font-weight:700;color:var(--tx2)">15%</span></div>
+                  <div style="display:flex;align-items:center;gap:9px;font-size:11.5px"><span style="width:96px;color:var(--tx3)">저보수</span><span style="flex:1 1 auto;height:5px;border-radius:3px;background:var(--surface3);overflow:hidden"><span style="display:block;height:5px;background:var(--tx3);width:25%"></span></span><span style="width:30px;text-align:right;font-weight:700;color:var(--tx2)">10%</span></div>
+                </div>
+                <div style="font-size:11px;color:var(--tx3);padding-top:10px;line-height:1.55">커버드콜(G1~G4) 안에서만 백분위를 계산합니다. 지수·채권·원자재·레버리지는 공란입니다.</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="padding:12px 15px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2)">
+                  <div style="font-size:12px;font-weight:700;padding-bottom:5px">초과수익을 쓰는 이유</div>
+                  <div style="font-size:11.5px;line-height:1.62;color:var(--tx2);text-wrap:pretty">커버드콜은 원지수를 대체하려는 상품입니다. 절대 총수익이 높아도 원지수를 밑돌면 원지수를 그냥 사는 편이 낫습니다. 그래서 순위의 40%를 원지수 대비 차이에 둡니다.</div>
+                </div>
+                <div style="padding:12px 15px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2)">
+                  <div style="font-size:12px;font-weight:700;padding-bottom:5px">참여율 · 방어폭 · NAV 침식</div>
+                  <div style="font-size:11.5px;line-height:1.62;color:var(--tx2);text-wrap:pretty">상승참여율은 원지수가 오른 구간에서 따라간 비율, 낙폭방어폭은 원지수 MDD보다 덜 빠진 폭입니다. NAV 침식은 직접 공시값이 없어 <strong style="font-weight:700;color:var(--tx)">상장 후 주가 변화</strong>를 대용치로 씁니다.</div>
+                </div>
+                <div style="display:flex;gap:10px;padding:12px 15px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r2)">
+                  <span style="font-size:15px;font-weight:700;color:var(--warn);line-height:1.2">≈</span>
+                  <div>
+                    <div style="font-size:12px;font-weight:700;padding-bottom:5px">데이터 출처와 ≈ 마커</div>
+                    <div style="font-size:11.5px;line-height:1.62;color:var(--tx2);text-wrap:pretty">미국은 Yahoo Finance 배당재투자 조정종가와 실제 분배기준일. 한국은 금액은 네이버 금융, 날짜는 Yahoo <code style="font-size:11px;background:var(--surface3);padding:1px 4px;border-radius:3px">.KS</code> 이력(46종 중 42종). 두 출처가 25% 넘게 어긋나면 관행 규칙으로 되돌리고 <strong style="font-weight:700;color:var(--warn)">≈</strong>를 붙입니다.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="s-chart" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:16px;margin-bottom:16px">
+        <div style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 22px">
+          <h3 style="margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.25px">분배율 vs 총수익률</h3>
+          <p id="n1" style="margin:6px 0 14px;font-size:12px;line-height:1.55;color:var(--tx2);text-wrap:pretty">오른쪽으로 갈수록 분배율이 높습니다. 점들이 우상향하지 않으면 <strong style="font-weight:700;color:var(--tx)">고배당이 고수익이라는 말은 거짓</strong>입니다.</p>
+          <div style="position:relative;height:296px"><canvas id="c1"></canvas></div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);padding:20px 22px">
+          <h3 style="margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.25px">상승참여율 vs 낙폭방어폭</h3>
+          <p style="margin:6px 0 14px;font-size:12px;line-height:1.55;color:var(--tx2);text-wrap:pretty">오른쪽 위가 잘 설계된 상품, 왼쪽 아래가 최악의 조합입니다. 사분면 배경으로 구획을 표시했습니다.</p>
+          <div style="position:relative;height:296px"><canvas id="c2"></canvas></div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:var(--r);padding:18px 20px">
+          <h3 style="margin:0;font-size:14.5px;font-weight:700;letter-spacing:-.2px">NAV 침식 — 상장 후 주가 변화</h3>
+          <p style="margin:6px 0 12px;font-size:11.5px;color:var(--tx2)">왼쪽(음수)으로 길수록 원금을 나눠 주고 있는 중</p>
+          <div style="position:relative;height:330px"><canvas id="c3"></canvas></div>
+        </div>
+        <div style="border:1px solid var(--line);border-radius:var(--r);padding:18px 20px">
+          <h3 style="margin:0;font-size:14.5px;font-weight:700;letter-spacing:-.2px">세대별 평균 지표</h3>
+          <p style="margin:6px 0 12px;font-size:11.5px;color:var(--tx2)">분배율은 3세대에서 정점, 초과수익은 4세대에서 회복</p>
+          <div style="position:relative;height:330px"><canvas id="c4"></canvas></div>
+        </div>
+      </section>
+
+      <section id="s-ins" style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 24px 24px;margin-bottom:16px">
+        <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.35px">총수익률 우선 관점의 결론</h2>
+        <p style="margin:6px 0 18px;font-size:12.5px;color:var(--tx2)">아래 문장은 매 갱신마다 데이터에서 다시 생성됩니다</p>
+        <div id="insights" style="display:flex;flex-direction:column;gap:2px">
+          <sc-for list="{{ insights }}" as="i" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:14px;padding:14px 4px;border-top:1px solid var(--line)">
+              <span style="font-size:12px;font-weight:700;color:var(--tx3)">{{ i.no }}</span>
+              <p style="margin:0;font-size:13.5px;line-height:1.6;text-wrap:pretty">{{ i.txt }}</p>
+              <span style="font-size:19px;font-weight:750;letter-spacing:-.5px;white-space:nowrap;{{ i.sx }}">{{ i.val }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section id="s-tax" style="border:1px solid var(--line);border-radius:var(--r);padding:22px 24px 24px;margin-bottom:16px">
+        <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px">
+          <h2 style="margin:0;font-size:16px;font-weight:700;letter-spacing:-.3px">한국 투자자 세금 구조</h2>
+          <span style="font-size:11px;color:var(--tx3);border:1px solid var(--line2);padding:3px 9px;border-radius:20px">데이터 갱신과 무관한 정적 문서</span>
+        </div>
+        <div style="max-width:900px;padding-top:16px">
+          <div style="display:grid;grid-template-columns:minmax(140px,1fr) minmax(0,1.3fr) minmax(0,1.3fr);gap:0;font-size:12.5px">
+            <div style="padding:9px 12px;font-size:10.5px;font-weight:700;letter-spacing:.6px;color:var(--tx3);border-bottom:1px solid var(--line2)">구분</div>
+            <div style="padding:9px 12px;font-size:10.5px;font-weight:700;letter-spacing:.6px;color:var(--tx3);border-bottom:1px solid var(--line2)">미국 직상장</div>
+            <div style="padding:9px 12px;font-size:10.5px;font-weight:700;letter-spacing:.6px;color:var(--tx3);border-bottom:1px solid var(--line2)">국내 상장</div>
+            <sc-for list="{{ tax }}" as="t" hint-placeholder-count="7">
+              <div style="padding:11px 12px;color:var(--tx2);border-bottom:1px solid var(--line)">{{ t.k }}</div>
+              <div style="padding:11px 12px;border-bottom:1px solid var(--line);line-height:1.55">{{ t.us }}</div>
+              <div style="padding:11px 12px;border-bottom:1px solid var(--line);line-height:1.55">{{ t.kr }}</div>
+            </sc-for>
+          </div>
+          <p style="margin:16px 0 0;font-size:12px;line-height:1.65;color:var(--tx2);text-wrap:pretty">실무 판단 기준: 분배금이 크고 매매를 거의 하지 않는다면 국내 상장의 배당소득세 부담이 누적됩니다. 반대로 총수익 중 주가 상승 몫이 크다면 미국 직상장의 양도세 250만원 기본공제가 유리합니다. 연금·ISA 계좌에는 미국 직상장 종목을 편입할 수 없습니다.</p>
+        </div>
+      </section>
+    </section>
+
+    <section id="pane-portfolio" data-screen-label="포트폴리오" hidden="{{ hidePortfolio }}">
+      <header style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px;padding-bottom:22px">
+        <div style="max-width:760px">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:1.3px;color:var(--tx3);padding-bottom:8px">내 포트폴리오</div>
+          <h1 style="margin:0;font-size:29px;line-height:1.24;font-weight:750;letter-spacing:-.7px;text-wrap:pretty">언제 얼마가 들어오는가보다,<br>그 금액이 늘고 있는가를 먼저 봅니다.</h1>
+          <p style="margin:11px 0 0;font-size:13px;color:var(--tx2)">계좌 유형별 세후 기준 · 보유 내역은 이 브라우저에만 저장됩니다</p>
+        </div>
+      </header>
+
+      <div hidden="{{ hideAlert }}" style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:15px 18px;margin-bottom:20px;background:var(--alertbg);border:1px solid var(--alertln);border-radius:var(--r)">
+        <span style="display:inline-flex;align-items:center;padding:5px 11px;background:var(--warn);color:var(--onacc);border-radius:20px;font-size:12px;font-weight:800;letter-spacing:-.1px;white-space:nowrap">{{ erosionBadge }}</span>
+        <div style="flex:1 1 320px;min-width:0;font-size:13px;line-height:1.55;color:var(--tx);text-wrap:pretty">{{ erosionTxt }}</div>
+        <a href="#s-div" style="font-size:12.5px;font-weight:700;padding:7px 13px;border:1px solid var(--alertln);border-radius:var(--r2);color:var(--tx)">판정표 보기</a>
+      </div>
+
+      <div id="pfcash" hidden="{{ hideCash }}" style="display:grid;grid-template-columns:minmax(0,1fr);gap:16px;padding-bottom:16px">
+
+        <section id="s-month" style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 24px 20px">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding-bottom:18px">
+            <div>
+              <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.35px">이번 달 분배금 &amp; 지급 예정일</h2>
+              <p style="margin:6px 0 0;font-size:12.5px;color:var(--tx2)">2026년 8월 기준 · 왼쪽 요약은 창을 넓혀도 항상 당월</p>
+            </div>
+            <div id="mnseg" style="display:inline-flex;gap:2px;padding:3px;background:var(--surface2);border:1px solid var(--line);border-radius:10px">
+              <sc-for list="{{ mnSeg }}" as="s" hint-placeholder-count="3">
+                <button sc-camel-on-click="{{ s.on }}" style="padding:6px 13px;border:0;border-radius:7px;font-size:12px;font-weight:650;cursor:pointer;{{ s.sx }}">{{ s.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:26px">
+            <div id="mnsum">
+              <div style="font-size:11.5px;font-weight:700;letter-spacing:.6px;color:var(--tx2);padding-bottom:9px">8월 세후 예상 수령액</div>
+              <div style="display:flex;align-items:baseline;gap:8px">
+                <div style="font-size:42px;line-height:1;font-weight:760;letter-spacing:-1.8px">{{ mnNet }}</div>
+                <div style="font-size:15px;font-weight:600;color:var(--tx3)">원</div>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px 14px;padding-top:12px;font-size:12px;color:var(--tx2)">
+                <span>세전 {{ mnGross }}원</span>
+                <span style="color:var(--line2)">|</span>
+                <span>{{ acctLabel }} 기준</span>
+                <span style="color:var(--line2)">|</span>
+                <span>총 {{ mnTotal }}건 중 {{ mnDone }}건 완료</span>
+              </div>
+              <div style="margin-top:18px;padding:14px 16px;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r2)">
+                <div style="font-size:11px;font-weight:700;letter-spacing:.6px;color:var(--tx3);padding-bottom:8px">다음 지급</div>
+                <div style="display:flex;align-items:baseline;gap:10px">
+                  <span style="font-size:26px;font-weight:750;letter-spacing:-.9px;color:var(--acc)">D-{{ mnDday }}</span>
+                  <span style="font-size:13.5px;font-weight:650">{{ mnNextT }}</span>
+                </div>
+                <div style="font-size:12px;color:var(--tx2);padding-top:6px">{{ mnNextDate }} · 세후 {{ mnNextAmt }}원</div>
+              </div>
+              <div style="display:flex;gap:9px;margin-top:12px;padding:11px 14px;border:1px dashed var(--line2);border-radius:var(--r2)">
+                <span style="font-size:12px;color:var(--tx3);font-weight:700">i</span>
+                <div style="font-size:11.5px;line-height:1.6;color:var(--tx2);text-wrap:pretty">기준일은 8월이지만 입금이 9월로 넘어가는 건이 <strong style="color:var(--tx);font-weight:700">1건</strong> 있습니다. 국내 월말 기준일 종목은 다음 달 초에 들어옵니다.</div>
+              </div>
+            </div>
+
+            <div>
+              <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 128px;gap:0;padding:0 0 8px;font-size:10.5px;font-weight:700;letter-spacing:.6px;color:var(--tx3);border-bottom:1px solid var(--line2)">
+                <span style="padding-left:2px">지급 예상일</span>
+                <span>종목 · 분배기준일</span>
+                <span style="text-align:right">예상 수령액</span>
+              </div>
+              <div id="mnlist">
+                <sc-for list="{{ mnRows }}" as="m" hint-placeholder-count="6">
+                  <div style="display:grid;grid-template-columns:96px minmax(0,1fr) 128px;align-items:center;gap:0;padding:11px 0;border-bottom:1px solid var(--line);{{ m.sx }}">
+                    <div>
+                      <div style="font-size:13px;font-weight:700;letter-spacing:-.2px">{{ m.day }}</div>
+                      <div style="display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;letter-spacing:.3px;color:var(--tx3);border:1px solid var(--line2);padding:1px 5px;border-radius:3px;margin-top:3px">{{ m.tag }}</div>
+                    </div>
+                    <div style="min-width:0;padding-right:10px">
+                      <div style="display:flex;align-items:center;gap:7px">
+                        <span style="width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:{{ m.color }}"></span>
+                        <span style="font-size:13px;font-weight:650">{{ m.t }}</span>
+                        <span style="font-size:11px;color:var(--tx3)">{{ m.approx }}</span>
+                      </div>
+                      <div style="font-size:11px;color:var(--tx3);padding-top:2px">분배기준일 {{ m.basis }} · {{ m.name }}</div>
+                    </div>
+                    <div style="text-align:right">
+                      <div style="font-size:13.5px;font-weight:700;letter-spacing:-.2px">{{ m.net }}</div>
+                      <div style="font-size:10.5px;color:var(--tx3);padding-top:2px">세전 {{ m.gross }}</div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+              <div id="mnnote" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding-top:12px;font-size:11px;color:var(--tx3)">
+                <span style="display:inline-flex;align-items:center;gap:6px"><span style="font-weight:700;letter-spacing:.3px;border:1px solid var(--line2);padding:1px 5px;border-radius:3px">추정</span> 기준일 + 영업일 3일 가정 · 공휴일 미반영</span>
+                <span style="display:inline-flex;align-items:center;gap:6px"><span style="font-weight:700;color:var(--warn)">≈</span> 출처 간 25% 이상 불일치 → 관행 규칙 대체값</span>
+                <span style="opacity:.55">흐린 행 = 이미 지급 완료</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="s-div" style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);padding:22px 24px 20px">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding-bottom:18px">
+            <div>
+              <div style="display:flex;align-items:center;gap:9px">
+                <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.35px">분배금 추세</h2>
+                <span style="font-size:10.5px;font-weight:700;letter-spacing:.5px;color:var(--onacc);background:var(--acc);padding:2px 7px;border-radius:4px">핵심</span>
+              </div>
+              <p style="margin:6px 0 0;font-size:12.5px;color:var(--tx2)">늘고 있나, 줄고 있나 — 보유 수량이 아니라 주당 금액으로 판정</p>
+            </div>
+            <div id="dvseg" style="display:inline-flex;gap:2px;padding:3px;background:var(--surface2);border:1px solid var(--line);border-radius:10px">
+              <sc-for list="{{ dvSeg }}" as="s" hint-placeholder-count="2">
+                <button sc-camel-on-click="{{ s.on }}" style="padding:6px 13px;border:0;border-radius:7px;font-size:12px;font-weight:650;cursor:pointer;{{ s.sx }}">{{ s.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div id="dvsum" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;padding:18px 20px;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r2)">
+            <div>
+              <p style="margin:0;font-size:15px;line-height:1.62;text-wrap:pretty">보유 포트폴리오의 주당 분배금은 1년 전 대비 <strong style="font-size:19px;font-weight:760;letter-spacing:-.4px;{{ dvDeltaSx }}">{{ dvDelta }}</strong> — <strong style="font-weight:750">{{ dvVerdict }}</strong></p>
+              <div style="font-size:11.5px;color:var(--tx3);padding-top:8px">평가금액 가중 · TTM 12개월 이동합 기준</div>
+              <div style="display:flex;flex-wrap:wrap;gap:7px;padding-top:14px">
+                <sc-for list="{{ dvFlags }}" as="f" hint-placeholder-count="2">
+                  <span style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:12px;font-weight:700;{{ f.sx }}">{{ f.label }}</span>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding-left:24px;border-left:1px solid var(--line)">
+              <div>
+                <div style="font-size:11px;color:var(--tx3);padding-bottom:4px">연 예상 수령액</div>
+                <div style="font-size:22px;font-weight:750;letter-spacing:-.7px">{{ dvAnnual }}<span style="font-size:12px;font-weight:600;color:var(--tx3);padding-left:3px">원</span></div>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--tx3);padding-bottom:4px">월 평균</div>
+                <div style="font-size:22px;font-weight:750;letter-spacing:-.7px">{{ dvMonthly }}<span style="font-size:12px;font-weight:600;color:var(--tx3);padding-left:3px">원</span></div>
+              </div>
+              <div style="font-size:11px;color:var(--tx3)">{{ acctLabel }} 세후</div>
+            </div>
+          </div>
+
+          <div id="dvchart" style="padding-top:18px">
+            <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding-bottom:10px">
+              <div style="font-size:12.5px;font-weight:700">{{ dvChartTitle }}</div>
+              <div style="font-size:11.5px;color:var(--tx3)">{{ dvChartHint }}</div>
+            </div>
+            <div style="position:relative;height:300px"><canvas id="cp2"></canvas></div>
+          </div>
+
+          <div hidden="{{ hideDvMonth }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;padding-top:16px">
+            <div style="padding:13px 15px;border:1px solid var(--line);border-radius:var(--r2)">
+              <div style="font-size:11px;color:var(--tx3);padding-bottom:5px">가장 많이 들어오는 달</div>
+              <div style="font-size:17px;font-weight:750;letter-spacing:-.4px">12월 · 412,800원</div>
+            </div>
+            <div style="padding:13px 15px;border:1px solid var(--line);border-radius:var(--r2)">
+              <div style="font-size:11px;color:var(--tx3);padding-bottom:5px">가장 적게 들어오는 달</div>
+              <div style="font-size:17px;font-weight:750;letter-spacing:-.4px">2월 · 168,400원</div>
+            </div>
+            <div style="padding:13px 15px;border:1px solid var(--line);border-radius:var(--r2)">
+              <div style="font-size:11px;color:var(--tx3);padding-bottom:5px">편차 배수</div>
+              <div style="font-size:17px;font-weight:750;letter-spacing:-.4px">2.45배</div>
+            </div>
+          </div>
+
+          <div id="dvtbl" hidden="{{ hideDvTbl }}" style="padding-top:20px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:10px">
+              <div style="font-size:12.5px;font-weight:700">종목별 판정</div>
+              <div style="font-size:11px;color:var(--tx3)">전년 동기 대비 TTM 주당분배금 ±8% 기준</div>
+            </div>
+            <div id="dvwrap" style="overflow-x:auto">
+              <div style="min-width:760px">
+                <div style="display:grid;grid-template-columns:minmax(150px,1.2fr) 150px 104px 112px 96px 128px;align-items:end;gap:0;padding-bottom:9px;border-bottom:1px solid var(--line2);font-size:10.5px;font-weight:700;letter-spacing:.5px;color:var(--tx3)">
+                  <span>종목</span>
+                  <span>최근 회차 · TTM 주당분배금</span>
+                  <span style="text-align:right">3개월 전 대비</span>
+                  <span style="text-align:right">전년 동기 대비</span>
+                  <span style="text-align:right">주가 1년</span>
+                  <span style="text-align:right">판정</span>
+                </div>
+                <sc-for list="{{ dvRows }}" as="d" hint-placeholder-count="6">
+                  <div style="display:grid;grid-template-columns:minmax(150px,1.2fr) 150px 104px 112px 96px 128px;align-items:center;gap:0;padding:12px 0;border-bottom:1px solid var(--line);{{ d.rowSx }}">
+                    <div style="display:flex;align-items:center;gap:9px;min-width:0;padding-left:8px">
+                      <span style="width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:{{ d.color }}"></span>
+                      <div style="min-width:0">
+                        <div style="font-size:13px;font-weight:700">{{ d.t }}</div>
+                        <div style="font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">{{ d.name }}</div>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="font-size:12.5px;font-weight:650">{{ d.dps }}</div>
+                      <div style="font-size:10.5px;color:var(--tx3);padding-top:2px">{{ d.last }}</div>
+                    </div>
+                    <div style="text-align:right;font-size:12.5px;font-weight:600;{{ d.q3Sx }}">{{ d.q3 }}</div>
+                    <div style="text-align:right;font-size:14px;font-weight:700;{{ d.yoySx }}">{{ d.yoy }}</div>
+                    <div style="text-align:right;font-size:12.5px;font-weight:600;{{ d.pxSx }}">{{ d.px }}</div>
+                    <div style="text-align:right;padding-right:8px">
+                      <span style="display:inline-flex;align-items:center;gap:6px;{{ d.badgeSx }}">{{ d.badge }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div id="np2" style="display:flex;flex-wrap:wrap;gap:8px 18px;padding-top:14px;font-size:11px;color:var(--tx3)">
+              <span style="display:inline-flex;align-items:center;gap:6px"><span style="display:inline-flex;padding:3px 9px;background:var(--warn);color:var(--onacc);border-radius:20px;font-size:11px;font-weight:800">원금 잠식</span> 분배금은 유지인데 주가가 −8% 이하 — 통장만 보면 이상이 없어 보이는 구간</span>
+              <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--pos)"></span>증액 ≥ +8%</span>
+              <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--tx3)"></span>횡보 −8~+8%</span>
+              <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--neg)"></span>감액 ≤ −8%</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section id="s-hold" style="background:var(--surface);border:1px solid var(--line2);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden">
+        <div style="padding:22px 24px 0">
+          <h2 style="margin:0;font-size:18px;font-weight:700;letter-spacing:-.35px">보유 현황</h2>
+          <p style="margin:6px 0 0;font-size:12.5px;color:var(--tx2)">평가금액과 리밸런싱만 이 카드가 소유합니다. 분배 관련 수치는 위 두 카드에 있습니다.</p>
+        </div>
+
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:18px 24px 0;padding:12px 16px;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r2)">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:.7px;color:var(--tx3)">설정</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <sc-for list="{{ acctChips }}" as="c" hint-placeholder-count="3">
+              <button sc-camel-on-click="{{ c.on }}" style="padding:6px 13px;border-radius:20px;font-size:12px;font-weight:650;cursor:pointer;border:1px solid var(--line2);{{ c.sx }}">{{ c.label }}</button>
+            </sc-for>
+          </div>
+          <span style="width:1px;height:22px;background:var(--line)"></span>
+          <div style="position:relative">
+            <button sc-camel-on-click="{{ toggleAdd }}" style="display:inline-flex;align-items:center;gap:7px;padding:7px 14px;background:var(--acc);color:var(--onacc);border:0;border-radius:var(--r2);font-size:12.5px;font-weight:700;cursor:pointer">＋ 종목 추가</button>
+            <div hidden="{{ addClosed }}" style="position:absolute;top:calc(100% + 7px);left:0;z-index:20;width:196px;padding:6px;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r2);box-shadow:0 18px 40px -18px rgba(0,0,0,.6)">
+              <div style="font-size:10.5px;font-weight:700;letter-spacing:.6px;color:var(--tx3);padding:6px 10px 7px">자산군 선택</div>
+              <sc-for list="{{ addKinds }}" as="k" hint-placeholder-count="5">
+                <button id="{{ k.id }}" sc-camel-on-click="{{ k.on }}" style="display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;background:transparent;border:0;border-radius:var(--r3);font-size:12.5px;color:var(--tx);cursor:pointer;text-align:left" style-hover="background:var(--surface2)">
+                  <span style="width:8px;height:8px;border-radius:50%;background:{{ k.color }}"></span>{{ k.label }}
+                </button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+            <button id="pfexp" style="padding:7px 12px;background:transparent;color:var(--tx2);border:1px solid var(--line2);border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer" style-hover="color:var(--tx);border-color:var(--tx3)">내보내기</button>
+            <button id="pfimp" style="padding:7px 12px;background:transparent;color:var(--tx2);border:1px solid var(--line2);border-radius:var(--r2);font-size:12px;font-weight:600;cursor:pointer" style-hover="color:var(--tx);border-color:var(--tx3)">불러오기</button>
+            <input type="file" id="pffile" accept="application/json,.json" style="display:none">
+            <span style="width:1px;height:22px;background:var(--line)"></span>
+            <div style="position:relative">
+              <button sc-camel-on-click="{{ toggleDanger }}" style="width:32px;height:32px;background:transparent;color:var(--tx3);border:1px solid var(--line);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer" style-hover="color:var(--tx);border-color:var(--line2)">⋯</button>
+              <div hidden="{{ dangerClosed }}" style="position:absolute;top:calc(100% + 7px);right:0;z-index:20;width:236px;padding:6px;background:var(--surface);border:1px solid var(--line2);border-radius:var(--r2);box-shadow:0 18px 40px -18px rgba(0,0,0,.6)">
+                <div style="padding:9px 11px;font-size:11.5px;line-height:1.55;color:var(--tx2);border-bottom:1px solid var(--line);margin-bottom:4px">되돌릴 수 없는 작업입니다. 먼저 내보내기로 백업하세요.</div>
+                <button id="pfclr" style="display:block;width:100%;padding:9px 11px;background:transparent;color:var(--neg);border:0;border-radius:var(--r3);font-size:12.5px;font-weight:700;cursor:pointer;text-align:left" style-hover="background:var(--negwash)">보유 내역 전체 삭제</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="pfkpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(196px,1fr));gap:0;margin:18px 24px 0;border:1px solid var(--line);border-radius:var(--r2);overflow:hidden">
+          <div style="padding:15px 17px;border-right:1px solid var(--line)">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:7px">총 평가금액</div>
+            <div id="pfk1" style="font-size:23px;font-weight:750;letter-spacing:-.8px">{{ np1 }}</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">{{ np1sub }}</div>
+          </div>
+          <div style="padding:15px 17px;border-right:1px solid var(--line)">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:7px">평가손익</div>
+            <div id="pfk2" style="font-size:23px;font-weight:750;letter-spacing:-.8px;{{ np2sx }}">{{ np2 }}</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">{{ np2sub }}</div>
+          </div>
+          <div style="padding:15px 17px;border-right:1px solid var(--line)">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:7px">평가익 과세 추정</div>
+            <div id="pfk3" style="font-size:23px;font-weight:750;letter-spacing:-.8px">{{ np3 }}</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">{{ np3sub }}</div>
+          </div>
+          <div style="padding:15px 17px">
+            <div style="font-size:11px;color:var(--tx3);padding-bottom:7px">리밸런싱 필요액</div>
+            <div id="pfk4" style="font-size:23px;font-weight:750;letter-spacing:-.8px">{{ np4 }}</div>
+            <div style="font-size:10.5px;color:var(--tx3);padding-top:5px">{{ np4sub }}</div>
+          </div>
+        </div>
+
+        <div hidden="{{ hideAcctWarn }}" style="display:flex;gap:10px;margin:12px 24px 0;padding:11px 15px;background:var(--negwash);border:1px solid var(--neg);border-radius:var(--r2)">
+          <span style="font-size:12px;font-weight:800;color:var(--neg)">!</span>
+          <div style="font-size:12px;line-height:1.55;color:var(--tx)">{{ acctWarnTxt }}</div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:12px;padding:20px 24px 10px">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:.7px;color:var(--tx3)">보유 내역</span>
+          <span style="flex:1 1 auto;height:1px;background:var(--line)"></span>
+          <span id="pfnote" style="font-size:11px;color:var(--tx3)">회색 배경 셀은 직접 입력</span>
+        </div>
+
+        <div style="overflow-x:auto;border-top:1px solid var(--line)">
+          <div id="pftbl" style="min-width:1180px">
+            <div style="display:grid;grid-template-columns:minmax(176px,1.1fr) 90px 108px 100px 126px 118px 82px 116px 78px 90px 112px 40px;align-items:end;gap:0;background:var(--surface2);border-bottom:1px solid var(--line2);font-size:10.5px;font-weight:700;letter-spacing:.4px;color:var(--tx3)">
+              <span style="padding:11px 14px;position:sticky;left:0;background:var(--surface2);border-right:1px solid var(--line)">종목</span>
+              <span style="padding:11px 10px;text-align:right">보유수량</span>
+              <span style="padding:11px 10px;text-align:right">평균단가</span>
+              <span style="padding:11px 10px;text-align:right">현재가</span>
+              <span style="padding:11px 10px;text-align:right">평가금액</span>
+              <span style="padding:11px 10px;text-align:right">평가손익</span>
+              <span style="padding:11px 10px;text-align:right">수익률</span>
+              <span style="padding:11px 10px;text-align:right">연 예상배당</span>
+              <span style="padding:11px 10px;text-align:right">현재비중</span>
+              <span style="padding:11px 10px;text-align:right">목표비중</span>
+              <span style="padding:11px 10px;text-align:right">조정금액</span>
+              <span style="padding:11px 8px"></span>
+            </div>
+            <sc-for list="{{ holdRows }}" as="h" hint-placeholder-count="6">
+              <div style="display:grid;grid-template-columns:minmax(176px,1.1fr) 90px 108px 100px 126px 118px 82px 116px 78px 90px 112px 40px;align-items:center;gap:0;border-bottom:1px solid var(--line)" style-hover="background:var(--wash)">
+                <div style="display:flex;align-items:center;gap:9px;padding:11px 14px;min-width:0;position:sticky;left:0;background:var(--surface);border-right:1px solid var(--line)">
+                  <span style="width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:{{ h.color }}"></span>
+                  <div style="min-width:0">
+                    <div style="display:flex;align-items:center;gap:6px">
+                      <span style="font-size:13px;font-weight:700">{{ h.t }}</span>
+                      <span style="font-size:9.5px;font-weight:700;color:var(--tx3);border:1px solid var(--line2);padding:1px 4px;border-radius:3px">{{ h.mkt }}</span>
+                    </div>
+                    <div style="font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">{{ h.name }}</div>
+                  </div>
+                </div>
+                <div style="padding:7px 6px"><input value="{{ h.qty }}" sc-camel-on-change="{{ h.onQty }}" style="width:100%;padding:6px 8px;background:var(--surface2);color:var(--tx);border:1px solid var(--line);border-radius:var(--r3);font-size:12.5px;text-align:right;outline:none" style-focus="border-color:var(--acc)"></div>
+                <div style="padding:7px 6px"><input value="{{ h.avg }}" sc-camel-on-change="{{ h.onAvg }}" style="width:100%;padding:6px 8px;background:var(--surface2);color:var(--tx);border:1px solid var(--line);border-radius:var(--r3);font-size:12.5px;text-align:right;outline:none" style-focus="border-color:var(--acc)"></div>
+                <div style="padding:11px 10px;text-align:right;font-size:12.5px;color:var(--tx2)">{{ h.px }}</div>
+                <div style="padding:11px 10px;text-align:right;font-size:13px;font-weight:700">{{ h.val }}</div>
+                <div style="padding:11px 10px;text-align:right;font-size:12.5px;font-weight:650;{{ h.plSx }}">{{ h.pl }}</div>
+                <div style="padding:11px 10px;text-align:right;font-size:12.5px;font-weight:650;{{ h.plSx }}">{{ h.plp }}</div>
+                <div style="padding:11px 10px;text-align:right;font-size:12.5px;color:var(--tx2)">{{ h.div }}</div>
+                <div style="padding:11px 10px;text-align:right;font-size:12.5px;font-weight:650">{{ h.w }}</div>
+                <div style="padding:7px 6px"><input value="{{ h.target }}" sc-camel-on-change="{{ h.onTarget }}" style="width:100%;padding:6px 8px;background:var(--surface2);color:var(--tx);border:1px solid var(--line);border-radius:var(--r3);font-size:12.5px;text-align:right;outline:none" style-focus="border-color:var(--acc)"></div>
+                <div style="padding:11px 10px;text-align:right;font-size:12.5px;font-weight:650;{{ h.adjSx }}">{{ h.adj }}</div>
+                <div style="padding:11px 8px;text-align:center"><button sc-camel-on-click="{{ h.onDel }}" style="width:24px;height:24px;background:transparent;color:var(--tx3);border:0;border-radius:var(--r3);font-size:13px;cursor:pointer" style-hover="color:var(--neg);background:var(--negwash)">×</button></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div id="pfempty" hidden="{{ hideEmpty }}" style="padding:52px 24px 56px;text-align:center">
+          <div style="font-size:14.5px;font-weight:650;padding-bottom:8px">아직 보유 종목이 없습니다</div>
+          <div style="font-size:12.5px;color:var(--tx2);line-height:1.6;max-width:400px;margin:0 auto">위의 ＋ 종목 추가 버튼으로 시작하세요. 입력한 내역은 서버로 전송되지 않고 이 브라우저에만 저장됩니다.</div>
+        </div>
+      </section>
+
+      <div id="pfcharts" hidden="{{ hideCharts }}" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(440px,1fr));gap:16px">
+        <section id="s-trend" style="grid-column:1/-1;border:1px solid var(--line);border-radius:var(--r);padding:20px 22px">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;padding-bottom:14px">
+            <div>
+              <h3 style="margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.25px">보유 종목 수익 추이</h3>
+              <p style="margin:6px 0 0;font-size:12px;color:var(--tx2)">굵은 선은 현재 비중으로 합성한 포트폴리오 곡선</p>
+            </div>
+            <div id="axseg" style="display:inline-flex;gap:2px;padding:3px;background:var(--surface2);border:1px solid var(--line);border-radius:10px">
+              <sc-for list="{{ axSeg }}" as="s" hint-placeholder-count="3">
+                <button sc-camel-on-click="{{ s.on }}" style="padding:6px 13px;border:0;border-radius:7px;font-size:12px;font-weight:650;cursor:pointer;{{ s.sx }}">{{ s.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position:relative;height:320px"><canvas id="cp1"></canvas></div>
+          <div id="np1" style="display:flex;flex-wrap:wrap;gap:10px;padding-top:14px">
+            <div style="flex:1 1 200px;padding:11px 14px;background:var(--surface2);border-radius:var(--r2)">
+              <div style="font-size:11px;color:var(--tx3);padding-bottom:4px">총수익률 (현금)</div>
+              <div style="font-size:17px;font-weight:750;letter-spacing:-.4px;color:var(--pos)">+14.2%</div>
+            </div>
+            <div style="flex:1 1 200px;padding:11px 14px;background:var(--surface2);border-radius:var(--r2)">
+              <div style="font-size:11px;color:var(--tx3);padding-bottom:4px">DRIP (재투자)</div>
+              <div style="font-size:17px;font-weight:750;letter-spacing:-.4px;color:var(--pos)">+16.8%</div>
+            </div>
+            <div style="flex:1 1 200px;padding:11px 14px;background:var(--surface2);border-radius:var(--r2)">
+              <div style="font-size:11px;color:var(--tx3);padding-bottom:4px">주가수익률</div>
+              <div style="font-size:17px;font-weight:750;letter-spacing:-.4px;color:var(--neg)">−2.4%</div>
+            </div>
+            <div style="flex:2 1 320px;padding:11px 14px;border:1px dashed var(--line2);border-radius:var(--r2);font-size:11.5px;line-height:1.6;color:var(--tx2)">주가수익률과 총수익률의 격차 <strong style="color:var(--tx);font-weight:700">16.6%p</strong>가 분배금 몫이고, 총수익률과 DRIP의 격차 <strong style="color:var(--tx);font-weight:700">2.6%p</strong>가 재투자 복리 몫입니다.</div>
+          </div>
+        </section>
+
+        <section id="s-nav" style="border:1px solid var(--line);border-radius:var(--r);padding:20px 22px">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:14px">
+            <div>
+              <h3 style="margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.25px">보유 종목 NAV 추이</h3>
+              <p style="margin:6px 0 0;font-size:12px;color:var(--tx2)">100 기준선 아래 = 분배금을 원금에서 꺼내 쓰는 중</p>
+            </div>
+            <div id="navseg" style="display:inline-flex;gap:2px;padding:3px;background:var(--surface2);border:1px solid var(--line);border-radius:10px">
+              <sc-for list="{{ navSeg }}" as="s" hint-placeholder-count="2">
+                <button sc-camel-on-click="{{ s.on }}" style="padding:6px 12px;border:0;border-radius:7px;font-size:11.5px;font-weight:650;cursor:pointer;{{ s.sx }}">{{ s.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position:relative;height:288px"><canvas id="cp4"></canvas></div>
+          <div id="np4" style="padding-top:14px">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) 96px 108px;gap:0;padding-bottom:7px;border-bottom:1px solid var(--line2);font-size:10.5px;font-weight:700;letter-spacing:.4px;color:var(--tx3)">
+              <span>종목</span><span style="text-align:right">원금 변화</span><span style="text-align:right">분배 기여</span>
+            </div>
+            <sc-for list="{{ navRows }}" as="n" hint-placeholder-count="4">
+              <div style="display:grid;grid-template-columns:minmax(0,1fr) 96px 108px;align-items:center;gap:0;padding:8px 0;border-bottom:1px solid var(--line);font-size:12.5px">
+                <span style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:{{ n.color }}"></span>{{ n.t }}</span>
+                <span style="text-align:right;font-weight:650;{{ n.pxSx }}">{{ n.px }}</span>
+                <span style="text-align:right;font-weight:650;color:var(--tx2)">{{ n.contrib }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section id="s-alloc" style="border:1px solid var(--line);border-radius:var(--r);padding:20px 22px">
+          <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:14px">
+            <div>
+              <h3 style="margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.25px">현재 비중</h3>
+              <p style="margin:6px 0 0;font-size:12px;color:var(--tx2)">집중도와 자산군 상한 경고</p>
+            </div>
+            <div id="pieseg" style="display:inline-flex;gap:2px;padding:3px;background:var(--surface2);border:1px solid var(--line);border-radius:10px">
+              <sc-for list="{{ pieSeg }}" as="s" hint-placeholder-count="2">
+                <button sc-camel-on-click="{{ s.on }}" style="padding:6px 12px;border:0;border-radius:7px;font-size:11.5px;font-weight:650;cursor:pointer;{{ s.sx }}">{{ s.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div style="position:relative;height:288px"><canvas id="cp3"></canvas></div>
+          <div id="np3" style="padding-top:14px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 14px;background:var(--surface2);border-radius:var(--r2)">
+              <span style="font-size:12px;color:var(--tx2)">HHI 집중도</span>
+              <span style="font-size:15px;font-weight:750;letter-spacing:-.3px">{{ hhi }}</span>
+            </div>
+            <sc-for list="{{ allocWarns }}" as="w" hint-placeholder-count="1">
+              <div style="display:flex;gap:9px;margin-top:9px;padding:10px 14px;border-radius:var(--r2);{{ w.sx }}">
+                <span style="font-size:12px;font-weight:800">!</span>
+                <span style="font-size:12px;line-height:1.55">{{ w.txt }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <footer style="display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:34px;padding-top:20px;border-top:1px solid var(--line);font-size:11.5px;color:var(--tx3);line-height:1.6">
+      <span>데이터 출처 — 미국: Yahoo Finance 배당재투자 조정종가 · 한국: 네이버 금융 수정주가 + Yahoo <code style="font-size:11px">.KS</code> ex-date</span>
+      <span>지급일은 전부 추정치 (기준일 + 영업일 3일, 공휴일 미반영)</span>
+      <span style="color:var(--tx2);font-weight:600">이 화면은 투자 권유가 아닙니다.</span>
+      <span style="flex:1 1 100%;opacity:.8">보유 내역은 이 브라우저의 localStorage에만 저장되며 서버로 전송되지 않습니다.</span>
+    </footer>
+  </main>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:1080}}">
+class Component extends DCLogic {
+  FX = 1415.7;
+
+  ROWS = [
+    {t:'QYLD',n:'Global X Nasdaq 100 Covered Call',gen:'G1',mkt:'US',ccy:'USD',px:17.42,y:12.3,tr1:6.1,ex:-13.9,cap:41,edge:3.1,tr3:4.2,trsi:5.4,pxsi:-39.8,px1:-5.8,mdd1:-11.2,mddsi:-28.4,vol:11.8,cal:0.54,er:0.61,sc:24,bm:'NDX',pc:12,dps:2.14},
+    {t:'XYLD',n:'Global X S&P 500 Covered Call',gen:'G1',mkt:'US',ccy:'USD',px:39.18,y:10.1,tr1:7.4,ex:-9.8,cap:47,edge:4.0,tr3:5.1,trsi:6.0,pxsi:-28.6,px1:-3.1,mdd1:-10.4,mddsi:-24.1,vol:10.6,cal:0.71,er:0.60,sc:31,bm:'SPX',pc:12,dps:3.96},
+    {t:'RYLD',n:'Global X Russell 2000 Covered Call',gen:'G1',mkt:'US',ccy:'USD',px:14.86,y:12.9,tr1:4.2,ex:-12.1,cap:38,edge:2.4,tr3:2.1,trsi:3.2,pxsi:-44.2,px1:-8.2,mdd1:-13.1,mddsi:-31.6,vol:12.9,cal:0.32,er:0.60,sc:18,bm:'RUT',pc:12,dps:1.92},
+    {t:'JEPI',n:'JPMorgan Equity Premium Income',gen:'G1',mkt:'US',ccy:'USD',px:58.42,y:7.4,tr1:11.8,ex:-3.6,cap:71,edge:6.4,tr3:8.4,trsi:9.6,pxsi:2.1,px1:3.9,mdd1:-8.2,mddsi:-13.4,vol:9.1,cal:1.44,er:0.35,sc:58,bm:'SPX',pc:12,dps:4.32},
+    {t:'DIVO',n:'Amplify CWP Enhanced Dividend Income',gen:'G1',mkt:'US',ccy:'USD',px:42.64,y:4.6,tr1:12.9,ex:-2.5,cap:79,edge:5.1,tr3:9.1,trsi:10.4,pxsi:18.4,px1:7.8,mdd1:-8.9,mddsi:-15.2,vol:9.8,cal:1.45,er:0.56,sc:61,bm:'SPX',pc:12,dps:1.96},
+    {t:'JEPQ',n:'JPMorgan Nasdaq Equity Premium Income',gen:'G2',mkt:'US',ccy:'USD',px:56.40,y:9.2,tr1:18.4,ex:-4.1,cap:78,edge:5.8,tr3:14.2,trsi:15.1,pxsi:9.6,px1:8.4,mdd1:-12.4,mddsi:-17.8,vol:14.1,cal:1.48,er:0.35,sc:66,bm:'NDX',pc:12,dps:4.94},
+    {t:'SPYI',n:'NEOS S&P 500 High Income',gen:'G2',mkt:'US',ccy:'USD',px:51.20,y:11.8,tr1:14.1,ex:-1.2,cap:84,edge:4.9,tr3:null,trsi:12.8,pxsi:2.8,px1:2.2,mdd1:-9.4,mddsi:-12.1,vol:10.2,cal:1.50,er:0.68,sc:72,bm:'SPX',pc:12,dps:5.62},
+    {t:'QQQI',n:'NEOS Nasdaq 100 High Income',gen:'G2',mkt:'US',ccy:'USD',px:52.84,y:13.4,tr1:17.2,ex:-5.3,cap:76,edge:5.2,tr3:null,trsi:14.9,pxsi:1.4,px1:1.9,mdd1:-12.8,mddsi:-14.2,vol:14.8,cal:1.34,er:0.68,sc:63,bm:'NDX',pc:12,dps:6.98},
+    {t:'472150',n:'TIGER 미국나스닥100커버드콜(합성)',gen:'G2',mkt:'KR',ccy:'KRW',px:11980,y:12.1,tr1:12.4,ex:-9.8,cap:58,edge:4.4,tr3:null,trsi:8.1,pxsi:-12.4,px1:-1.2,mdd1:-13.4,mddsi:-19.8,vol:13.9,cal:0.93,er:0.50,sc:41,bm:'NDX',pc:12,dps:1420,approx:true},
+    {t:'TSLY',n:'YieldMax TSLA Option Income Strategy',gen:'G3',mkt:'US',ccy:'USD',px:7.10,y:62.4,tr1:-18.6,ex:-41.2,cap:22,edge:-9.8,tr3:null,trsi:-24.1,pxsi:-78.4,px1:-48.2,mdd1:-52.4,mddsi:-84.1,vol:58.4,cal:-0.35,er:0.99,sc:6,bm:'TSLA',pc:12,dps:4.42},
+    {t:'NVDY',n:'YieldMax NVDA Option Income Strategy',gen:'G3',mkt:'US',ccy:'USD',px:16.84,y:48.1,tr1:24.8,ex:-38.4,cap:44,edge:-2.1,tr3:null,trsi:18.4,pxsi:-34.2,px1:-12.4,mdd1:-38.1,mddsi:-46.2,vol:44.2,cal:0.65,er:0.99,sc:21,bm:'NVDA',pc:12,dps:8.10},
+    {t:'MSTY',n:'YieldMax MSTR Option Income Strategy',gen:'G3',mkt:'US',ccy:'USD',px:18.24,y:88.4,tr1:-12.4,ex:-52.8,cap:28,edge:-14.2,tr3:null,trsi:-18.2,pxsi:-68.4,px1:-54.1,mdd1:-61.2,mddsi:-72.4,vol:78.4,cal:-0.20,er:0.99,sc:4,bm:'MSTR',pc:12,dps:16.12},
+    {t:'CONY',n:'YieldMax COIN Option Income Strategy',gen:'G3',mkt:'US',ccy:'USD',px:9.42,y:71.2,tr1:-22.4,ex:-34.1,cap:26,edge:-11.4,tr3:null,trsi:-28.4,pxsi:-74.2,px1:-58.4,mdd1:-58.4,mddsi:-78.2,vol:66.1,cal:-0.38,er:1.05,sc:5,bm:'COIN',pc:12,dps:6.71},
+    {t:'YMAX',n:'YieldMax Universe Fund of Option Income',gen:'G3',mkt:'US',ccy:'USD',px:10.18,y:44.8,tr1:-2.1,ex:-18.4,cap:34,edge:-4.2,tr3:null,trsi:-6.4,pxsi:-48.1,px1:-32.4,mdd1:-34.2,mddsi:-52.1,vol:32.4,cal:-0.06,er:1.28,sc:11,bm:'균등가중',pc:52,dps:4.56},
+    {t:'GPIX',n:'Goldman Sachs S&P 500 Core Premium Income',gen:'G4',mkt:'US',ccy:'USD',px:54.18,y:8.4,tr1:16.8,ex:-0.4,cap:92,edge:3.8,tr3:null,trsi:15.4,pxsi:8.1,px1:8.2,mdd1:-9.1,mddsi:-10.4,vol:9.9,cal:1.85,er:0.29,sc:84,bm:'SPX',pc:12,dps:4.55},
+    {t:'GPIQ',n:'Goldman Sachs Nasdaq 100 Core Premium Income',gen:'G4',mkt:'US',ccy:'USD',px:53.92,y:9.8,tr1:20.4,ex:-1.1,cap:90,edge:4.2,tr3:null,trsi:18.1,pxsi:9.4,px1:9.8,mdd1:-11.8,mddsi:-13.1,vol:13.4,cal:1.73,er:0.29,sc:81,bm:'NDX',pc:12,dps:5.28},
+    {t:'FEPI',n:'REX FANG & Innovation Equity Premium Income',gen:'G4',mkt:'US',ccy:'USD',px:47.10,y:24.6,tr1:12.1,ex:-8.4,cap:62,edge:1.9,tr3:null,trsi:9.4,pxsi:-14.2,px1:-8.1,mdd1:-18.4,mddsi:-22.1,vol:22.1,cal:0.66,er:0.65,sc:34,bm:'NYFANG',pc:12,dps:11.59},
+    {t:'AIPI',n:'REX AI Equity Premium Income',gen:'G4',mkt:'US',ccy:'USD',px:41.86,y:28.4,tr1:14.8,ex:-11.2,cap:58,edge:1.2,tr3:null,trsi:11.2,pxsi:-18.4,px1:-11.4,mdd1:-22.1,mddsi:-26.4,vol:26.8,cal:0.67,er:0.65,sc:29,bm:'AI지수',pc:12,dps:11.89},
+    {t:'486290',n:'KODEX 미국AI테크TOP10타겟커버드콜',gen:'G4',mkt:'KR',ccy:'KRW',px:12840,y:15.2,tr1:22.1,ex:-2.8,cap:86,edge:3.1,tr3:null,trsi:19.4,pxsi:4.1,px1:5.8,mdd1:-14.2,mddsi:-16.1,vol:16.8,cal:1.56,er:0.39,sc:76,bm:'AI TOP10',pc:12,dps:1951,approx:true},
+    {t:'SPY',n:'SPDR S&P 500 ETF Trust',gen:'BM',mkt:'US',ccy:'USD',px:642.10,y:1.2,tr1:15.4,ex:null,cap:null,edge:null,tr3:14.1,trsi:10.2,pxsi:412.4,px1:14.1,mdd1:-8.4,mddsi:-55.2,vol:12.8,cal:1.83,er:0.09,sc:null,bm:'—',pc:4,dps:7.70},
+    {t:'QQQ',n:'Invesco QQQ Trust',gen:'BM',mkt:'US',ccy:'USD',px:588.40,y:0.6,tr1:21.8,ex:null,cap:null,edge:null,tr3:19.4,trsi:12.4,pxsi:812.1,px1:21.1,mdd1:-12.1,mddsi:-82.9,vol:17.4,cal:1.80,er:0.20,sc:null,bm:'—',pc:4,dps:3.53},
+    {t:'TLT',n:'iShares 20+ Year Treasury Bond',gen:'BD',mkt:'US',ccy:'USD',px:88.90,y:4.1,tr1:2.4,ex:null,cap:null,edge:null,tr3:-4.1,trsi:3.1,pxsi:-18.4,px1:-1.6,mdd1:-9.8,mddsi:-48.2,vol:13.1,cal:0.24,er:0.15,sc:null,bm:'—',pc:12,dps:3.79},
+    {t:'148070',n:'KOSEF 국고채10년',gen:'BD',mkt:'KR',ccy:'KRW',px:118420,y:2.8,tr1:3.9,ex:null,cap:null,edge:null,tr3:1.2,trsi:3.8,pxsi:12.4,px1:1.2,mdd1:-4.2,mddsi:-12.8,vol:5.1,cal:0.93,er:0.15,sc:null,bm:'—',pc:1,dps:3316},
+    {t:'GLD',n:'SPDR Gold Shares',gen:'CM',mkt:'US',ccy:'USD',px:318.40,y:0,tr1:32.4,ex:null,cap:null,edge:null,tr3:21.4,trsi:8.4,pxsi:428.1,px1:32.4,mdd1:-6.8,mddsi:-45.1,vol:14.2,cal:4.76,er:0.40,sc:null,bm:'—',pc:0,dps:0},
+    {t:'TQQQ',n:'ProShares UltraPro QQQ (3x)',gen:'LV',mkt:'US',ccy:'USD',px:112.80,y:1.1,tr1:58.4,ex:null,cap:null,edge:null,tr3:52.1,trsi:24.1,pxsi:2841.2,px1:57.8,mdd1:-34.2,mddsi:-81.9,vol:52.4,cal:1.71,er:0.84,sc:null,bm:'—',pc:4,dps:1.24},
+    {t:'QLD',n:'ProShares Ultra QQQ (2x)',gen:'LV',mkt:'US',ccy:'USD',px:104.00,y:0.8,tr1:41.2,ex:null,cap:null,edge:null,tr3:36.4,trsi:19.8,pxsi:1284.1,px1:40.8,mdd1:-24.1,mddsi:-72.4,vol:34.8,cal:1.71,er:0.95,sc:null,bm:'—',pc:4,dps:0.82}
+  ];
+
+  GENMETA = {
+    G1:{name:'지수 전량 커버', thesis:'지수 전체에 콜을 매도해 최대 프리미엄을 확보했습니다. 상승을 거의 전부 포기한 대가로 원지수를 크게 밑돌고, 상장 후 주가가 계속 깎였습니다.'},
+    G2:{name:'부분 커버 · 참여율 회복', thesis:'커버 비율을 낮추고 ELN·스프레드를 섞어 상승 참여를 되찾았습니다. 초과수익 손실이 절반 이하로 줄어든 첫 세대입니다.'},
+    G3:{name:'개별종목 초고배당', thesis:'단일 종목에 합성 롱 + 콜 매도로 분배율을 40~90%까지 올렸습니다. 분배율 경쟁이 총수익을 파괴한 세대이고, 계보 전체에서 유일한 후퇴 구간입니다.'},
+    G4:{name:'총수익 최적화', thesis:'분배율을 목표가 아니라 결과로 두고 상승참여율과 보수를 함께 최적화했습니다. 초과수익 손실이 −1%p 안쪽까지 줄어든 종목이 처음 나왔습니다.'}
+  };
+  AXMETA = {BM:'벤치마크 지수', BD:'채권', CM:'원자재', LV:'레버리지'};
+
+  HOLD = [
+    {t:'JEPQ',name:'JPMorgan Nasdaq Equity Premium Income',gen:'G2',mkt:'US',ccy:'USD',qty:120,avg:52.10,target:22},
+    {t:'SPYI',name:'NEOS S&P 500 High Income',gen:'G2',mkt:'US',ccy:'USD',qty:80,avg:49.80,target:16},
+    {t:'TSLY',name:'YieldMax TSLA Option Income',gen:'G3',mkt:'US',ccy:'USD',qty:300,avg:9.40,target:4},
+    {t:'472150',name:'TIGER 미국나스닥100커버드콜(합성)',gen:'G2',mkt:'KR',ccy:'KRW',qty:900,avg:11250,target:24},
+    {t:'QLD',name:'ProShares Ultra QQQ (2x)',gen:'LV',mkt:'US',ccy:'USD',qty:40,avg:92.00,target:12},
+    {t:'TLT',name:'iShares 20+ Year Treasury Bond',gen:'BD',mkt:'US',ccy:'USD',qty:60,avg:92.50,target:22}
+  ];
+
+  DV = {
+    JEPQ:{dps:4.94,q3:1.2,yoy:6.4,last:'2026-08-01 · $0.42'},
+    SPYI:{dps:5.62,q3:0.4,yoy:9.8,last:'2026-07-31 · $0.48'},
+    TSLY:{dps:4.42,q3:-2.1,yoy:-4.2,last:'2026-08-07 · $0.31'},
+    '472150':{dps:1420,q3:0.8,yoy:-1.8,last:'2026-07-31 · 118원',approx:true},
+    QLD:{dps:0.82,q3:-6.4,yoy:-22.4,last:'2026-06-24 · $0.21'},
+    TLT:{dps:3.79,q3:0.6,yoy:2.1,last:'2026-08-03 · $0.32'}
+  };
+
+  SCHED = [
+    {t:'JEPQ',day:'08-06',basis:'07-31',done:true,net:52480,gross:61740},
+    {t:'TSLY',day:'08-12',basis:'08-07',done:true,net:33120,gross:38970},
+    {t:'SPYI',day:'08-05',basis:'07-31',done:true,net:45260,gross:53250},
+    {t:'TLT',day:'08-06',basis:'08-03',done:true,net:19180,gross:22560},
+    {t:'472150',day:'09-04',basis:'08-31',done:false,next:true,carry:true,net:88490,gross:104110},
+    {t:'QLD',day:'09-25',basis:'09-22',done:false,net:7440,gross:8750}
+  ];
+
+  TAX = [
+    {k:'분배금 과세',us:'배당소득세 15% 원천징수 (미국) + 국내 정산',kr:'배당소득세 15.4% 원천징수'},
+    {k:'매매차익 과세',us:'양도소득세 22%, 연 250만원 기본공제',kr:'국내주식형 비과세 / 해외지수형은 배당소득세'},
+    {k:'금융소득종합과세',us:'분배금만 합산 (연 2,000만원 초과)',kr:'분배금 + 과표증분 모두 합산'},
+    {k:'손익통산',us:'해외주식 간 통산 가능',kr:'ETF 간 통산 불가'},
+    {k:'연금저축 · IRP',us:'편입 불가',kr:'편입 가능 (과세이연)'},
+    {k:'ISA',us:'편입 불가',kr:'편입 가능 (200만원 비과세)'},
+    {k:'환율',us:'매수·매도 시점 환율로 각각 환산',kr:'환헤지형·언헤지형에 따라 다름'}
+  ];
+
+  state = {
+    tab:'research', theme:'dark',
+    sortK:'sc', sortD:-1, mkt:'all', genf:'cc', q:'', open:null, allOpen:false, method:false,
+    dvView:'dps', mnWin:1, axView:'tr', navView:'own', pieView:'tk',
+    acct:'general', addOpen:false, dangerOpen:false,
+    hold:null, ready:false
+  };
+
+  componentDidMount(){
+    let theme='dark', tab='research';
+    try{
+      theme = localStorage.getItem('ccl_theme_v1') || 'dark';
+      tab = localStorage.getItem('ccl_tab_v1') || 'research';
+    }catch(e){}
+    document.documentElement.setAttribute('data-theme', theme);
+    this.setState({theme, tab, hold:this.HOLD.map(h=>Object.assign({},h)), ready:true}, ()=>this.waitChart());
+  }
+  componentWillUnmount(){ this.destroy(); }
+
+  waitChart(){
+    if(window.Chart){ this.build(); return; }
+    if(this._tries>60) return;
+    this._tries=(this._tries||0)+1;
+    setTimeout(()=>this.waitChart(), 120);
+  }
+
+  cssv(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+  gcol(g){ return this.cssv('--'+String(g||'bm').toLowerCase()) || '#8b95a5'; }
+
+  destroy(){
+    const c=this._charts||{};
+    Object.keys(c).forEach(k=>{ try{ c[k].destroy(); }catch(e){} });
+    this._charts={};
+  }
+
+  fmt(v,d){ if(v===null||v===undefined) return '—'; return v.toFixed(d===undefined?1:d); }
+  sgn(v,d,suf){ if(v===null||v===undefined) return '—'; const s=v>0?'+':(v<0?'−':''); return s+Math.abs(v).toFixed(d===undefined?1:d)+(suf||''); }
+  won(v){ if(v===null||v===undefined) return '—'; return Math.round(v).toLocaleString('ko-KR'); }
+  sgnWon(v){ if(v===null||v===undefined) return '—'; const s=v>0?'+':(v<0?'−':''); return s+Math.round(Math.abs(v)).toLocaleString('ko-KR'); }
+  posSx(v){ if(v===null||v===undefined) return 'color:var(--tx3)'; return v>0?'color:var(--pos)':(v<0?'color:var(--neg)':'color:var(--tx2)'); }
+
+  cc(){ return this.ROWS.filter(r=>/^G[1-4]$/.test(r.gen)); }
+  avg(a,k){ const v=a.map(x=>x[k]).filter(x=>typeof x==='number'); return v.length? v.reduce((s,x)=>s+x,0)/v.length : null; }
+
+  krw(h){ const r=this.ROWS.find(x=>x.t===h.t)||{px:0}; const px=r.px; const mult=h.ccy==='USD'?this.FX:1; return {px, val:h.qty*px*mult, cost:h.qty*h.avg*mult, mult}; }
+
+  totals(){
+    const hold=this.state.hold||[];
+    let val=0, cost=0, divy=0;
+    hold.forEach(h=>{ const k=this.krw(h); val+=k.val; cost+=k.cost; const r=this.ROWS.find(x=>x.t===h.t)||{y:0}; divy+=k.val*(r.y||0)/100; });
+    return {val, cost, pl:val-cost, plp:cost?((val-cost)/cost*100):0, divy};
+  }
+
+  seg(list, cur, set){
+    return list.map(o=>({label:o[1], on:()=>set(o[0]),
+      sx: cur===o[0] ? 'background:var(--surface3);color:var(--tx);box-shadow:0 1px 0 rgba(0,0,0,.2)' : 'background:transparent;color:var(--tx3)'}));
+  }
+  chip(list, cur, set){
+    return list.map(o=>({label:o[1], on:()=>set(o[0]),
+      sx: cur===o[0] ? 'background:var(--acc);color:var(--onacc);border-color:var(--acc)' : 'background:transparent;color:var(--tx2)'}));
+  }
+
+  setTab(t){ this.setState({tab:t}); try{ localStorage.setItem('ccl_tab_v1',t); }catch(e){} setTimeout(()=>this.build(),40); }
+  toggleTheme(){
+    const t = this.state.theme==='dark'?'light':'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    try{ localStorage.setItem('ccl_theme_v1',t); }catch(e){}
+    this.setState({theme:t}, ()=>{ this.destroy(); this.build(); });
+  }
+
+  series(seed, n, drift, vol, start){
+    let s=seed, v=start===undefined?100:start; const out=[v];
+    const rnd=()=>{ s=(s*1103515245+12345)&0x7fffffff; return s/0x7fffffff-0.5; };
+    for(let i=1;i<n;i++){ v = v*(1+drift/100/n*n/n) + v*(drift/100/n) + v*rnd()*vol/100; out.push(Math.max(v,1)); }
+    return out.map(x=>Math.round(x*100)/100);
+  }
+  hash(s){ let h=0; for(let i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))&0x7fffffff; return h||7; }
+
+  build(){
+    if(!window.Chart) return;
+    this.destroy();
+    const C=window.Chart, tx=this.cssv('--tx'), tx2=this.cssv('--tx2'), tx3=this.cssv('--tx3'), grid=this.cssv('--grid'), line=this.cssv('--line2'), surf=this.cssv('--surface');
+    C.defaults.font.family='-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif';
+    C.defaults.font.size=11;
+    C.defaults.color=tx3;
+    const base=(extra)=>Object.assign({responsive:true,maintainAspectRatio:false,animation:{duration:260},plugins:{legend:{display:false},tooltip:{backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7,displayColors:true}}}, extra||{});
+    const ax=(title,extra)=>Object.assign({grid:{color:grid,drawTicks:false},border:{color:line},ticks:{color:tx3,padding:6},title:{display:!!title,text:title,color:tx3,font:{size:10.5,weight:'700'}}}, extra||{});
+
+    const quad=(xMid,yMid,labels)=>({id:'q'+Math.random(),beforeDatasetsDraw(c){
+      const {ctx,chartArea:a,scales}=c; if(!a) return;
+      const x=scales.x.getPixelForValue(xMid), y=scales.y.getPixelForValue(yMid);
+      const g=(px,py,pw,ph,col)=>{ ctx.save(); ctx.fillStyle=col; ctx.fillRect(px,py,pw,ph); ctx.restore(); };
+      g(a.left,a.top,x-a.left,y-a.top,labels.tl.bg); g(x,a.top,a.right-x,y-a.top,labels.tr.bg);
+      g(a.left,y,x-a.left,a.bottom-y,labels.bl.bg); g(x,y,a.right-x,a.bottom-y,labels.br.bg);
+      ctx.save(); ctx.strokeStyle=line; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x,a.top); ctx.lineTo(x,a.bottom); ctx.moveTo(a.left,y); ctx.lineTo(a.right,y); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.font='700 10.5px -apple-system,sans-serif'; ctx.fillStyle=tx3;
+      ctx.textAlign='left'; ctx.textBaseline='top'; ctx.fillText(labels.tl.t,a.left+8,a.top+7);
+      ctx.textAlign='right'; ctx.fillText(labels.tr.t,a.right-8,a.top+7);
+      ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.fillText(labels.bl.t,a.left+8,a.bottom-7);
+      ctx.textAlign='right'; ctx.fillText(labels.br.t,a.right-8,a.bottom-7); ctx.restore();
+    }});
+
+    const mk=(id,cfg)=>{ const el=document.getElementById(id); if(!el) return; this._charts[id]=new C(el,cfg); };
+    const pt=(rows,fx,fy)=>rows.map(r=>({x:fx(r),y:fy(r),t:r.t,g:r.gen}));
+    const cc=this.cc();
+    const dotDs=(rows,fx,fy)=>({data:pt(rows,fx,fy),pointBackgroundColor:rows.map(r=>this.gcol(r.gen)),pointBorderColor:rows.map(r=>this.gcol(r.gen)),pointRadius:6,pointHoverRadius:9,borderWidth:0});
+    const tipT={callbacks:{label:(c)=>`${c.raw.t} · ${c.raw.x.toFixed(1)} / ${c.raw.y.toFixed(1)}`}};
+
+    const wash=(c,a)=>{ return c+''; };
+    mk('c1',{type:'scatter',data:{datasets:[dotDs(cc,r=>r.y,r=>r.tr1)]},
+      options:base({scales:{x:ax('분배율 TTM (%)'),y:ax('총수익 1년 (%)')},plugins:{legend:{display:false},tooltip:Object.assign({backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7},tipT)}}),
+      plugins:[quad(20,0,{tl:{t:'저분배 · 플러스',bg:'rgba(47,190,116,.05)'},tr:{t:'고분배 · 플러스',bg:'rgba(91,156,246,.05)'},bl:{t:'저분배 · 마이너스',bg:'rgba(0,0,0,0)'},br:{t:'고분배인데 마이너스',bg:'rgba(255,96,96,.07)'}})]});
+
+    mk('c2',{type:'scatter',data:{datasets:[dotDs(cc,r=>r.cap,r=>r.edge)]},
+      options:base({scales:{x:ax('상승참여율 (%)'),y:ax('낙폭방어폭 (%p)')},plugins:{legend:{display:false},tooltip:Object.assign({backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7},tipT)}}),
+      plugins:[quad(65,0,{tl:{t:'방어만 잘함',bg:'rgba(229,169,43,.05)'},tr:{t:'잘 설계된 상품',bg:'rgba(47,190,116,.07)'},bl:{t:'최악 조합',bg:'rgba(255,96,96,.09)'},br:{t:'참여만 잘함',bg:'rgba(91,156,246,.05)'}})]});
+
+    const er=cc.slice().sort((a,b)=>a.pxsi-b.pxsi);
+    mk('c3',{type:'bar',data:{labels:er.map(r=>r.t),datasets:[{data:er.map(r=>r.pxsi),backgroundColor:er.map(r=>this.gcol(r.gen)),borderRadius:3,barThickness:9}]},
+      options:base({indexAxis:'y',scales:{x:ax('상장 후 주가 변화 (%)',{grid:{color:grid}}),y:ax(null,{grid:{display:false},ticks:{color:tx2,font:{size:10.5,weight:'600'}}})}})});
+
+    const gk=['G1','G2','G3','G4'];
+    mk('c4',{type:'bar',data:{labels:gk.map(g=>g+'세대'),datasets:[
+      {label:'분배율 TTM',data:gk.map(g=>this.avg(cc.filter(r=>r.gen===g),'y')),backgroundColor:tx3,borderRadius:3},
+      {label:'총수익 1Y',data:gk.map(g=>this.avg(cc.filter(r=>r.gen===g),'tr1')),backgroundColor:this.cssv('--acc'),borderRadius:3},
+      {label:'초과수익 1Y',data:gk.map(g=>this.avg(cc.filter(r=>r.gen===g),'ex')),backgroundColor:this.cssv('--acc2'),borderRadius:3}
+    ]},options:base({scales:{x:ax(null,{grid:{display:false},ticks:{color:tx2,font:{size:11,weight:'700'}}}),y:ax('%')},plugins:{legend:{display:true,position:'top',align:'end',labels:{boxWidth:9,boxHeight:9,color:tx2,font:{size:10.5},usePointStyle:true,pointStyle:'rectRounded'}},tooltip:{backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7}}})});
+
+    const hold=this.state.hold||[];
+    const months=['25-09','25-10','25-11','25-12','26-01','26-02','26-03','26-04','26-05','26-06','26-07','26-08'];
+    if(this.state.dvView==='dps'){
+      const labels=['24개월 전','-21','-18','-15','-12','-9','-6','-3','현재'];
+      const ds=hold.filter(h=>(this.DV[h.t]||{}).dps).map(h=>{
+        const yoy=(this.DV[h.t]||{yoy:0}).yoy, end=100+yoy*1.6;
+        const n=9, out=[]; const seed=this.hash(h.t);
+        for(let i=0;i<n;i++){ const f=i/(n-1); const wob=((seed>>(i%7))%9-4)*0.55; out.push(Math.round((100+(end-100)*f+wob)*10)/10); }
+        return {label:h.t,data:out,borderColor:this.gcol(h.gen),backgroundColor:'transparent',borderWidth:2,pointRadius:0,pointHoverRadius:5,tension:.25};
+      });
+      mk('cp2',{type:'line',data:{labels,datasets:ds},options:base({scales:{x:ax(null,{grid:{display:false}}),y:ax('24개월 전 = 100')},plugins:{legend:{display:true,position:'top',align:'end',labels:{boxWidth:9,boxHeight:9,color:tx2,font:{size:10.5},usePointStyle:true,pointStyle:'line'}},tooltip:{backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7},annotation:{}}})});
+    } else {
+      const m=['9월','10월','11월','12월','1월','2월','3월','4월','5월','6월','7월','8월'];
+      const gross=[286,244,262,412,232,168,278,246,268,392,254,272].map(x=>x*1000);
+      mk('cp2',{type:'bar',data:{labels:m,datasets:[
+        {label:'세후',data:gross.map(x=>Math.round(x*0.846)),backgroundColor:this.cssv('--acc'),borderRadius:4},
+        {label:'세전',data:gross.map(x=>Math.round(x*0.154)),backgroundColor:this.cssv('--surface3'),borderRadius:4}
+      ]},options:base({scales:{x:ax(null,{stacked:true,grid:{display:false},ticks:{color:tx2}}),y:ax('원',{stacked:true,ticks:{color:tx3,callback:(v)=>(v/10000)+'만'}})},plugins:{legend:{display:true,position:'top',align:'end',labels:{boxWidth:9,boxHeight:9,color:tx2,font:{size:10.5},usePointStyle:true,pointStyle:'rectRounded'}},tooltip:{backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7}}})});
+    }
+
+    const mode=this.state.axView;
+    const boost = mode==='drip'?1.18:(mode==='px'?0.12:1);
+    const dsT=hold.map(h=>{
+      const r=this.ROWS.find(x=>x.t===h.t)||{tr1:0,px1:0};
+      const target = 100 + (mode==='px'? r.px1 : r.tr1*boost);
+      const seed=this.hash(h.t+mode); const out=[];
+      for(let i=0;i<12;i++){ const f=i/11; const wob=((seed>>(i%9))%11-5)*0.9; out.push(Math.round((100+(target-100)*f+wob)*10)/10); }
+      return {label:h.t,data:out,borderColor:this.gcol(h.gen),borderWidth:1.6,pointRadius:0,pointHoverRadius:5,tension:.3,order:2};
+    });
+    const pf=[]; for(let i=0;i<12;i++){ let s=0; dsT.forEach(d=>s+=d.data[i]); pf.push(Math.round(s/Math.max(dsT.length,1)*10)/10); }
+    dsT.push({label:'포트폴리오',data:pf,borderColor:this.cssv('--tx'),borderWidth:3.2,pointRadius:0,pointHoverRadius:6,tension:.3,order:1});
+    mk('cp1',{type:'line',data:{labels:months,datasets:dsT},options:base({scales:{x:ax(null,{grid:{display:false}}),y:ax('12개월 전 = 100')},plugins:{legend:{display:true,position:'top',align:'end',labels:{boxWidth:9,boxHeight:9,color:tx2,font:{size:10.5},usePointStyle:true,pointStyle:'line'}},tooltip:{backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7}}})});
+
+    const baseline={id:'bl100',afterDatasetsDraw(c){const {ctx,chartArea:a,scales}=c; if(!a)return; const y=scales.y.getPixelForValue(100); ctx.save(); ctx.strokeStyle=tx3; ctx.lineWidth=1.4; ctx.setLineDash([5,4]); ctx.beginPath(); ctx.moveTo(a.left,y); ctx.lineTo(a.right,y); ctx.stroke(); ctx.font='700 10px -apple-system,sans-serif'; ctx.fillStyle=tx3; ctx.textAlign='left'; ctx.textBaseline='bottom'; ctx.fillText('100 = 원금 보전',a.left+6,y-4); ctx.restore();}};
+    const dsN=hold.map(h=>{
+      const r=this.ROWS.find(x=>x.t===h.t)||{pxsi:0};
+      const target=100+(this.state.navView==='own'? r.pxsi*0.35 : r.px1);
+      const seed=this.hash(h.t+'nav'); const out=[];
+      for(let i=0;i<12;i++){ const f=i/11; const wob=((seed>>(i%8))%9-4)*0.8; out.push(Math.round((100+(target-100)*f+wob)*10)/10); }
+      return {label:h.t,data:out,borderColor:this.gcol(h.gen),borderWidth:1.8,pointRadius:0,pointHoverRadius:5,tension:.3};
+    });
+    mk('cp4',{type:'line',data:{labels:months,datasets:dsN},options:base({scales:{x:ax(null,{grid:{display:false}}),y:ax(this.state.navView==='own'?'각자 상장 시점 = 100':'공통 시점 = 100')},plugins:{legend:{display:true,position:'top',align:'end',labels:{boxWidth:9,boxHeight:9,color:tx2,font:{size:10.5},usePointStyle:true,pointStyle:'line'}},tooltip:{backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7}}}),plugins:[baseline]});
+
+    const T=this.totals();
+    let labels, vals, cols;
+    if(this.state.pieView==='tk'){
+      labels=hold.map(h=>h.t); vals=hold.map(h=>this.krw(h).val); cols=hold.map(h=>this.gcol(h.gen));
+    } else {
+      const m={}; hold.forEach(h=>{ const k=/^G[1-4]$/.test(h.gen)?'커버드콜':this.AXMETA[h.gen]; m[k]=(m[k]||0)+this.krw(h).val; });
+      labels=Object.keys(m); vals=labels.map(k=>m[k]);
+      const cmap={'커버드콜':this.cssv('--g2'),'채권':this.cssv('--bd'),'원자재':this.cssv('--cm'),'레버리지':this.cssv('--lv'),'벤치마크 지수':this.cssv('--bm')};
+      cols=labels.map(k=>cmap[k]||this.cssv('--bm'));
+    }
+    const center={id:'ctr',afterDraw:(c)=>{const {ctx,chartArea:a}=c; if(!a)return; const cx=(a.left+a.right)/2, cy=(a.top+a.bottom)/2; ctx.save(); ctx.textAlign='center'; ctx.fillStyle=tx3; ctx.font='700 10.5px -apple-system,sans-serif'; ctx.fillText('총 평가금액',cx,cy-14); ctx.fillStyle=tx; ctx.font='750 20px -apple-system,sans-serif'; ctx.fillText(this.won(T.val)+'원',cx,cy+10); ctx.restore();}};
+    mk('cp3',{type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:cols,borderColor:surf,borderWidth:2.5,hoverOffset:6}]},
+      options:base({cutout:'66%',plugins:{legend:{display:true,position:'bottom',labels:{boxWidth:9,boxHeight:9,color:tx2,font:{size:10.5},usePointStyle:true,pointStyle:'circle',padding:11}},tooltip:{backgroundColor:surf,titleColor:tx,bodyColor:tx2,borderColor:line,borderWidth:1,padding:9,cornerRadius:7,callbacks:{label:(c)=>` ${c.label} ${this.won(c.raw)}원 (${(c.raw/T.val*100).toFixed(1)}%)`}}}}),plugins:[center]});
+  }
+
+  renderVals(){
+    const S=this.state, cc=this.cc();
+    const gk=['G1','G2','G3','G4'];
+    const exAvg=gk.map(g=>this.avg(cc.filter(r=>r.gen===g),'ex'));
+    const lo=Math.min.apply(null,exAvg.concat([0])), hi=0;
+    const top=18, band=80;
+    const yFor=(v)=>top + (0-v)/(0-lo||1)*band;
+    const xFor=(i)=>50+i*100;
+    const spineBars=exAvg.map((v,i)=>({color:'var(--g'+(i+1)+')', h:Math.max(yFor(v)-top,2)+'px', txt:(v>0?'+':'−')+Math.abs(v).toFixed(1)+'%p'}));
+    const spinePts=exAvg.map((v,i)=>xFor(i)+','+yFor(v)).join(' ');
+
+    const gens=gk.map((g,i)=>{
+      const rows=cc.filter(r=>r.gen===g);
+      return {label:(i+1)+'세대 · '+g, name:this.GENMETA[g].name, thesis:this.GENMETA[g].thesis, cnt:rows.length,
+        color:'var(--g'+(i+1)+')',
+        trTxt:this.sgn(this.avg(rows,'tr1'),1,'%'), trSx:this.posSx(this.avg(rows,'tr1')),
+        exTxt:this.sgn(this.avg(rows,'ex'),1,'%p'), exSx:this.posSx(this.avg(rows,'ex')),
+        yTxt:this.fmt(this.avg(rows,'y'),1)+'%',
+        pxTxt:this.sgn(this.avg(rows,'pxsi'),1,'%'), pxSx:this.posSx(this.avg(rows,'pxsi'))};
+    });
+    const axes=['BM','BD','CM','LV'].map(g=>{
+      const rows=this.ROWS.filter(r=>r.gen===g);
+      return {label:this.AXMETA[g], cnt:rows.length, color:'var(--'+g.toLowerCase()+')', trTxt:this.sgn(this.avg(rows,'tr1'),1,'%')};
+    });
+
+    let rows=this.ROWS.filter(r=>{
+      if(S.mkt!=='all' && r.mkt!==S.mkt) return false;
+      if(S.genf==='cc' && !/^G[1-4]$/.test(r.gen)) return false;
+      if(S.genf!=='cc' && S.genf!=='all' && r.gen!==S.genf) return false;
+      if(S.q){ const q=S.q.toLowerCase(); if(!(r.t.toLowerCase().includes(q)||r.n.toLowerCase().includes(q))) return false; }
+      return true;
+    });
+    const k=S.sortK, d=S.sortD;
+    rows=rows.slice().sort((a,b)=>{
+      if(k==='t') return a.t.localeCompare(b.t)*d;
+      const av=a[k], bv=b[k];
+      if(av===null||av===undefined) return 1;
+      if(bv===null||bv===undefined) return -1;
+      return (av-bv)*d;
+    });
+    const maxSc=100;
+    const vRows=rows.map(r=>{
+      const open = S.allOpen || S.open===r.t;
+      const isCC=/^G[1-4]$/.test(r.gen);
+      const bad = r.ex!==null && r.ex<=-15;
+      return {
+        t:r.t, n:r.n, mkt:r.mkt, gen:isCC?r.gen:r.gen, color:'var(--'+r.gen.toLowerCase()+')', bm:r.bm,
+        on:()=>this.setState({open: S.open===r.t?null:r.t, allOpen:false}),
+        closed:!open, chevSx: open?'transform:rotate(180deg)':'',
+        wrapSx: bad?'background:var(--negwash)':(open?'background:var(--wash)':''),
+        scTxt: r.sc===null?'—':String(r.sc), scSx: r.sc===null?'color:var(--tx3)':'', scW:(r.sc===null?0:r.sc/maxSc*100)+'%',
+        exTxt:this.sgn(r.ex,1,'%p'), exSx:this.posSx(r.ex),
+        trTxt:this.sgn(r.tr1,1,'%'), trSx:this.posSx(r.tr1),
+        edgeTxt:r.edge===null?'—':this.sgn(r.edge,1,'%p'), edgeSx:r.edge===null?'color:var(--tx3)':this.posSx(r.edge),
+        yTxt:(r.approx?'≈':'')+this.fmt(r.y,1)+'%',
+        tr3Txt:r.tr3===null?'이력 부족':this.sgn(r.tr3,1,'%'),
+        trsiTxt:this.sgn(r.trsi,1,'%'),
+        pxsiTxt:this.sgn(r.pxsi,1,'%'), pxsiSx:this.posSx(r.pxsi),
+        px1Txt:this.sgn(r.px1,1,'%'), px1Sx:this.posSx(r.px1),
+        dpsTxt:(r.approx?'≈ ':'')+(r.ccy==='USD'?'$'+r.dps.toFixed(2):this.won(r.dps)+'원'),
+        mdd1Txt:this.fmt(r.mdd1,1)+'%', mddsiTxt:this.fmt(r.mddsi,1)+'%',
+        volTxt:this.fmt(r.vol,1)+'%', calTxt:this.fmt(r.cal,2),
+        capTxt:r.cap===null?'—':this.fmt(r.cap,0)+'%',
+        erTxt:this.fmt(r.er,2)+'%', mktCcy:r.mkt+' · '+r.ccy, pcTxt:r.pc?r.pc+'회':'없음',
+        pxTxt:r.ccy==='USD'?'$'+r.px.toFixed(2):this.won(r.px)+'원',
+        verdict: !isCC
+          ? '자산배분 축 종목입니다. 옵션을 매도하지 않으므로 초과수익·참여율·종합점수를 계산하지 않습니다. 커버드콜과 같은 자로 재지 마세요.'
+          : (r.ex<=-15
+            ? '원지수를 '+Math.abs(r.ex).toFixed(1)+'%p 밑돌았습니다. 분배율 '+r.y.toFixed(1)+'%는 상장 후 주가 '+r.pxsi.toFixed(1)+'%로 되돌려 준 것에 가깝습니다. 같은 위험을 지려면 '+r.bm+'를 직접 사는 편이 낫습니다.'
+            : (r.ex>=-2
+              ? '원지수 대비 손실이 '+Math.abs(r.ex).toFixed(1)+'%p에 불과하고 상승참여율 '+r.cap+'%를 유지했습니다. 분배금을 받으면서 원지수를 거의 따라간 드문 구간입니다.'
+              : '원지수를 '+Math.abs(r.ex).toFixed(1)+'%p 밑돌았습니다. 낙폭방어폭 '+this.sgn(r.edge,1)+'%p를 대가로 지불한 상승 포기분입니다. 방어를 사는 값으로 볼지 판단하십시오.'))
+      };
+    });
+
+    const T=this.totals();
+    const hold=S.hold||[];
+    const holdRows=hold.map((h,i)=>{
+      const kk=this.krw(h), r=this.ROWS.find(x=>x.t===h.t)||{y:0};
+      const w=T.val? kk.val/T.val*100:0, adj=(h.target-w)/100*T.val;
+      return {t:h.t,name:h.name,mkt:h.mkt,color:'var(--'+h.gen.toLowerCase()+')',
+        qty:String(h.qty), avg:String(h.avg), target:String(h.target),
+        px:h.ccy==='USD'?'$'+kk.px.toFixed(2):this.won(kk.px)+'원',
+        val:this.won(kk.val), pl:this.sgnWon(kk.val-kk.cost), plp:this.sgn(kk.cost?(kk.val-kk.cost)/kk.cost*100:0,1,'%'),
+        plSx:this.posSx(kk.val-kk.cost), div:this.won(kk.val*(r.y||0)/100), w:this.fmt(w,1)+'%',
+        adj:this.sgnWon(adj), adjSx:Math.abs(adj)<T.val*0.02?'color:var(--tx3)':this.posSx(adj),
+        onQty:(e)=>{const v=parseFloat(e.target.value)||0; const nh=hold.slice(); nh[i]=Object.assign({},h,{qty:v}); this.setState({hold:nh},()=>this.build());},
+        onAvg:(e)=>{const v=parseFloat(e.target.value)||0; const nh=hold.slice(); nh[i]=Object.assign({},h,{avg:v}); this.setState({hold:nh},()=>this.build());},
+        onTarget:(e)=>{const v=parseFloat(e.target.value)||0; const nh=hold.slice(); nh[i]=Object.assign({},h,{target:v}); this.setState({hold:nh});},
+        onDel:()=>{const nh=hold.slice(); nh.splice(i,1); this.setState({hold:nh},()=>this.build());}};
+    });
+
+    const dvRows=hold.map(h=>{
+      const dv=this.DV[h.t]||{dps:0,q3:0,yoy:0,last:'—'};
+      const r=this.ROWS.find(x=>x.t===h.t)||{px1:0};
+      let badge='횡보', kind='flat';
+      if(dv.yoy===null||dv.yoy===undefined){badge='이력 부족';kind='none';}
+      else if(dv.yoy>=8){badge='증액';kind='up';}
+      else if(dv.yoy<=-8){badge='감액';kind='down';}
+      if(kind!=='none' && dv.yoy>-8 && r.px1<=-8){badge='원금 잠식';kind='erode';}
+      const badgeSx = kind==='none' ? 'font-size:12px;font-weight:600;color:var(--tx3);opacity:.55'
+        : kind==='erode'
+        ? 'padding:5px 12px;background:var(--warn);color:var(--onacc);border-radius:20px;font-size:12.5px;font-weight:800;letter-spacing:-.1px;box-shadow:0 0 0 3px var(--alertbg)'
+        : kind==='up' ? 'font-size:12.5px;font-weight:700;color:var(--pos)'
+        : kind==='down' ? 'font-size:12.5px;font-weight:700;color:var(--neg)'
+        : 'font-size:12.5px;font-weight:600;color:var(--tx3)';
+      return {t:h.t,name:h.name,color:'var(--'+h.gen.toLowerCase()+')',
+        dps:(dv.approx?'≈ ':'')+(h.ccy==='USD'?'$'+dv.dps.toFixed(2):this.won(dv.dps)+'원'),
+        last:dv.last, q3:this.sgn(dv.q3,1,'%'), q3Sx:this.posSx(dv.q3),
+        yoy:this.sgn(dv.yoy,1,'%'), yoySx:this.posSx(dv.yoy),
+        px:this.sgn(r.px1,1,'%'), pxSx:this.posSx(r.px1),
+        badge, badgeSx, rowSx: kind==='erode'?'background:var(--alertbg)':''};
+    });
+    const erode=dvRows.filter(d=>d.badge==='원금 잠식');
+    const cut=dvRows.filter(d=>d.badge==='감액');
+
+    const dvW = hold.reduce((s,h)=>{ const dv=this.DV[h.t]; return s + (dv? this.krw(h).val*dv.yoy : 0); },0) / Math.max(T.val,1);
+    const verdict = dvW<=-8?'줄고 있습니다.':dvW<=-3?'조금씩 줄고 있습니다.':dvW<3?'거의 그대로입니다.':dvW<8?'조금씩 늘고 있습니다.':'늘고 있습니다.';
+    const annual=T.divy*0.846, monthly=annual/12;
+
+    const flags=[];
+    if(erode.length) flags.push({label:'원금 잠식 '+erode.length+'종: '+erode.map(e=>e.t).join(', '),sx:'background:var(--warn);color:var(--onacc)'});
+    if(cut.length) flags.push({label:'감액 '+cut.length+'종: '+cut.map(e=>e.t).join(', '),sx:'background:transparent;color:var(--neg);border:1px solid var(--neg)'});
+    if(!flags.length) flags.push({label:'감액·잠식 없음',sx:'background:transparent;color:var(--tx3);border:1px solid var(--line2)'});
+
+    const win=S.mnWin;
+    const sched=this.SCHED.filter(s=>win>=2 || s.day.startsWith('08') || s.carry);
+    const mnRows=sched.map(s=>{
+      const r=this.ROWS.find(x=>x.t===s.t)||{};
+      return {t:s.t,name:(r.n||'').slice(0,26),color:'var(--'+((r.gen||'bm').toLowerCase())+')',
+        day:s.day.replace('-','월 ')+'일', basis:s.basis, tag:s.done?'지급 완료':'추정',
+        approx:r.approx?'≈':'', net:this.won(s.net)+'원', gross:this.won(s.gross)+'원',
+        sx:s.done?'opacity:.42':(s.next?'background:var(--wash)':'')};
+    });
+    const cur=this.SCHED.filter(s=>s.day.startsWith('08'));
+    const mnNet=cur.reduce((a,s)=>a+s.net,0), mnGross=cur.reduce((a,s)=>a+s.gross,0);
+    const nxt=this.SCHED.find(s=>!s.done)||{t:'—',day:'—',net:0};
+    const nr=this.ROWS.find(x=>x.t===nxt.t)||{};
+
+    const acctLabel={general:'일반계좌',pension:'연금계좌',isa:'ISA'}[S.acct];
+    const usHold=hold.filter(h=>h.mkt==='US');
+    const acctWarn = S.acct!=='general' && usHold.length>0;
+
+    const lev=hold.filter(h=>h.gen==='LV').reduce((s,h)=>s+this.krw(h).val,0)/Math.max(T.val,1)*100;
+    const ccw=hold.filter(h=>/^G[1-4]$/.test(h.gen)).reduce((s,h)=>s+this.krw(h).val,0)/Math.max(T.val,1)*100;
+    const warns=[];
+    if(lev>15) warns.push({txt:'레버리지 비중 '+lev.toFixed(1)+'% — 상한 15%를 초과했습니다.',sx:'background:var(--negwash);color:var(--tx);border:1px solid var(--neg)'});
+    if(ccw>60) warns.push({txt:'커버드콜 비중 '+ccw.toFixed(1)+'% — 상한 60%를 초과했습니다. 분배금 의존도가 높습니다.',sx:'background:var(--alertbg);color:var(--tx);border:1px solid var(--alertln)'});
+    const hhi=hold.reduce((s,h)=>{const w=this.krw(h).val/Math.max(T.val,1);return s+w*w;},0);
+
+    const navRows=hold.map(h=>{const r=this.ROWS.find(x=>x.t===h.t)||{pxsi:0,y:0};
+      return {t:h.t,color:'var(--'+h.gen.toLowerCase()+')',px:this.sgn(r.pxsi*0.35,1,'%'),pxSx:this.posSx(r.pxsi),contrib:'+'+(r.y||0).toFixed(1)+'%p'};});
+
+    const arrow=(kk)=> S.sortK===kk ? (S.sortD===-1?'▾':'▴') : '';
+    const setSort=(kk)=>()=>this.setState({sortK:kk, sortD: S.sortK===kk ? -S.sortD : -1});
+
+    const kEx=this.avg(cc,'ex'), kTr=this.avg(cc,'tr1'), kPx=this.avg(cc,'pxsi');
+
+    return {
+      cntTxt:this.ROWS.length+'종 샘플',
+      ccCount:cc.length,
+      themeLabel:S.theme==='dark'?'라이트 테마로':'다크 테마로',
+      themeHint:S.theme==='dark'?'현재 다크':'현재 라이트',
+      toggleTheme:()=>this.toggleTheme(),
+      goResearch:()=>this.setTab('research'), goPortfolio:()=>this.setTab('portfolio'),
+      hideResearch:S.tab!=='research', hidePortfolio:S.tab!=='portfolio',
+      hideResearchSub:S.tab!=='research', hidePortfolioSub:S.tab!=='portfolio',
+      tabResearchSx:S.tab==='research'?'background:var(--surface3);color:var(--tx)':'background:transparent;color:var(--tx2)',
+      tabPortfolioSx:S.tab==='portfolio'?'background:var(--surface3);color:var(--tx)':'background:transparent;color:var(--tx2)',
+      sideAlertTxt: erode.length? '잠식 '+erode.length : '',
+      sideAlertSx: erode.length? 'color:var(--warn)':'display:none',
+
+      kEx:this.sgn(kEx,1), kExSx:this.posSx(kEx),
+      kTr:this.sgn(kTr,1), kTrSx:this.posSx(kTr),
+      kY:this.fmt(this.avg(cc,'y'),1), kCap:this.fmt(this.avg(cc,'cap'),0),
+      kEdge:this.sgn(this.avg(cc,'edge'),1), kPx:this.sgn(kPx,1), kPxSx:this.posSx(kPx),
+      kMdd:this.fmt(this.avg(cc,'mdd1'),1),
+
+      spineBars, spinePts, gens, axes,
+
+      rows:vRows, shownTxt:vRows.length+'종 표시 / 전체 '+this.ROWS.length+'종',
+      q:S.q, onSearch:(e)=>this.setState({q:e.target.value}),
+      toggleAll:()=>this.setState({allOpen:!S.allOpen, open:null}),
+      allLabel:S.allOpen?'전부 접기':'전부 펼치기',
+      methodClosed:!S.method, methodLabel:S.method?'접기':'펼치기',
+      toggleMethod:()=>this.setState({method:!S.method}),
+      mktChips:this.chip([['all','전체'],['US','미국'],['KR','한국']],S.mkt,(v)=>this.setState({mkt:v})),
+      genChips:this.chip([['cc','커버드콜만'],['G1','1세대'],['G2','2세대'],['G3','3세대'],['G4','4세대'],['all','벤치마크 포함']],S.genf,(v)=>this.setState({genf:v})),
+      sortT:setSort('t'), sortSc:setSort('sc'), sortEx:setSort('ex'), sortTr:setSort('tr1'), sortEdge:setSort('edge'), sortY:setSort('y'),
+      arrT:arrow('t'), arrSc:arrow('sc'), arrEx:arrow('ex'), arrTr:arrow('tr1'), arrEdge:arrow('edge'), arrY:arrow('y'),
+
+      insights:[
+        {no:'01',txt:'분배율 상위 5종의 평균 총수익 1년은 '+this.fmt(this.avg(cc.slice().sort((a,b)=>b.y-a.y).slice(0,5),'tr1'),1)+'%, 하위 5종은 '+this.fmt(this.avg(cc.slice().sort((a,b)=>a.y-b.y).slice(0,5),'tr1'),1)+'%입니다. 고배당이 고수익이라는 말은 이 데이터에서 성립하지 않습니다.',val:'상관 없음',sx:'color:var(--tx2);font-size:15px'},
+        {no:'02',txt:'커버드콜 '+cc.length+'종 중 원지수를 앞선 종목은 0종입니다. 초과수익이 −2%p 안쪽인 종목만 '+cc.filter(r=>r.ex>-2).length+'종.',val:this.sgn(kEx,1)+'%p',sx:this.posSx(kEx)},
+        {no:'03',txt:'3세대(개별종목 초고배당)의 평균 초과수익은 '+this.fmt(this.avg(cc.filter(r=>r.gen==='G3'),'ex'),1)+'%p로 계보 전체에서 유일한 후퇴 구간입니다. 분배율 경쟁이 총수익을 파괴했습니다.',val:'3세대 후퇴',sx:'color:var(--neg);font-size:15px'},
+        {no:'04',txt:'상승참여율 85% 이상이면서 상장 후 주가가 플러스인 종목은 '+cc.filter(r=>r.cap>=85&&r.pxsi>0).map(r=>r.t).join(', ')+' 뿐입니다. 총수익 우선 관점에서 남는 후보는 이만큼입니다.',val:cc.filter(r=>r.cap>=85&&r.pxsi>0).length+'종',sx:'color:var(--pos)'}
+      ],
+      tax:this.TAX,
+
+      hideAlert:!erode.length, erosionBadge:'원금 잠식 '+erode.length+'종',
+      erosionTxt: erode.length? erode.map(e=>e.t).join(', ')+' — 분배금은 그대로인데 주가가 '+erode.map(e=>e.px).join(', ')+' 움직였습니다. 통장 입금 내역만 보면 아무 이상이 없어 보이는 구간입니다.' : '',
+      hideCash:hold.length===0, hideCharts:hold.length===0, hideEmpty:hold.length>0,
+
+      mnSeg:this.seg([[1,'이번 달'],[2,'2개월'],[3,'3개월']],S.mnWin,(v)=>this.setState({mnWin:v})),
+      mnNet:this.won(mnNet), mnGross:this.won(mnGross), mnTotal:this.SCHED.length, mnDone:this.SCHED.filter(s=>s.done).length,
+      mnDday:18, mnNextT:nxt.t, mnNextDate:'2026-'+nxt.day+' (추정)', mnNextAmt:this.won(nxt.net), mnRows,
+      acctLabel,
+
+      dvSeg:this.seg([['dps','주당 분배금 추이'],['month','월별 예상 수령액']],S.dvView,(v)=>this.setState({dvView:v},()=>this.build())),
+      dvDelta:this.sgn(dvW,1,'%'), dvDeltaSx:this.posSx(dvW), dvVerdict:verdict,
+      dvAnnual:this.won(annual), dvMonthly:this.won(monthly), dvFlags:flags,
+      dvChartTitle:S.dvView==='dps'?'종목별 TTM 주당분배금 지수':'향후 12개월 월별 예상 수령액',
+      dvChartHint:S.dvView==='dps'?'선이 우하향이면 주당 금액이 실제로 줄고 있다는 뜻':'세후 기준 · 회색은 원천징수분',
+      hideDvTbl:S.dvView!=='dps', hideDvMonth:S.dvView!=='month', dvRows,
+
+      acctChips:this.chip([['general','일반'],['pension','연금'],['isa','ISA']],S.acct,(v)=>this.setState({acct:v})),
+      toggleAdd:()=>this.setState({addOpen:!S.addOpen,dangerOpen:false}),
+      addClosed:!S.addOpen,
+      addKinds:[['g2','커버드콜','pfadd'],['bm','지수','pfaddbm'],['bd','채권','pfaddbd'],['cm','원자재','pfaddcm'],['lv','레버리지','pfaddlv']].map(k=>({label:k[1],color:'var(--'+k[0]+')',id:k[2],on:()=>this.setState({addOpen:false})})),
+      toggleDanger:()=>this.setState({dangerOpen:!S.dangerOpen,addOpen:false}),
+      dangerClosed:!S.dangerOpen,
+
+      np1:this.won(T.val)+'원', np1sub:hold.length+'종목 · USD 1,415.7 환산',
+      np2:this.sgnWon(T.pl)+'원', np2sx:this.posSx(T.pl), np2sub:this.sgn(T.plp,1,'%')+' · 취득 '+this.won(T.cost)+'원',
+      np3:this.won(Math.max(T.pl,0)*0.22)+'원', np3sub:'미국 직상장 양도세 22% · 250만원 공제 전',
+      np4:this.won(Math.abs(hold.reduce((s,h)=>{const w=T.val?this.krw(h).val/T.val*100:0;return s+Math.abs((h.target-w)/100*T.val);},0)/2))+'원',
+      np4sub:'목표 비중까지 옮겨야 할 총액',
+      hideAcctWarn:!acctWarn,
+      acctWarnTxt:acctLabel+'에는 미국 직상장 종목을 편입할 수 없습니다. '+usHold.map(h=>h.t).join(', ')+' '+usHold.length+'종이 편입 불가입니다.',
+      holdRows,
+
+      axSeg:this.seg([['tr','총수익률(현금)'],['drip','DRIP(재투자)'],['px','주가수익률']],S.axView,(v)=>this.setState({axView:v},()=>this.build())),
+      navSeg:this.seg([['own','각자 상장 = 100'],['common','공통 시점 = 100']],S.navView,(v)=>this.setState({navView:v},()=>this.build())),
+      pieSeg:this.seg([['tk','종목별'],['cls','자산군별']],S.pieView,(v)=>this.setState({pieView:v},()=>this.build())),
+      navRows, allocWarns:warns, hhi:hhi.toFixed(3)
+    };
+  }
+}
+</script>
+
+
+</body></html>
