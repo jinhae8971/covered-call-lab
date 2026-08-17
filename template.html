@@ -25,7 +25,7 @@ document.documentElement.setAttribute('data-theme',t);})();
   --acc:#5b9cf6; --acc2:#7c6cf0; --onacc:#08111f;
   --pos:#37d67a; --neg:#ff5f5f; --warn:#f0a92e;
   --g1:#e0605e; --g2:#e8933a; --g3:#4a9eea; --g4:#a86fd6;
-  --bm:#7a8798; --cm:#d4a017; --lv:#e84393;
+  --bm:#7a8798; --cm:#d4a017; --lv:#e84393; --bd:#16a085;
   --code:#b9c6da; --thbg:#111722; --tdline:#1b222e; --rowhover:#181f2b;
   --chipon-bg:rgba(91,156,246,.16); --chipon-bd:rgba(91,156,246,.55); --chipon-tx:#cfe2ff;
   --btnhover:#2a3446; --bordhover:#44526c;
@@ -299,7 +299,7 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
   <div class="phead">
     <div>
       <h1>커버드콜 ETF 계보 &amp; 총수익률 리서치</h1>
-      <div class="sub">QYLD(2013) &rarr; JEPQ(2022) &rarr; QQQI/GPIQ(2024) &rarr; 0DTE&middot;부스티드(2026) &middot; 미국 + 한국 상장 통합 &middot; 원자재&middot;레버리지 포함</div>
+      <div class="sub">QYLD(2013) &rarr; JEPQ(2022) &rarr; QQQI/GPIQ(2024) &rarr; 0DTE&middot;부스티드(2026) &middot; 미국 + 한국 상장 통합 &middot; 채권&middot;원자재&middot;레버리지 포함</div>
     </div>
   </div>
 
@@ -310,7 +310,7 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
     <div class="gen-row" id="genrow"></div>
     <h2 style="margin:20px 0 12px"><span class="bar"></span>자산배분 축 &mdash; 커버드콜 평가 대상이 아닌 카테고리</h2>
     <div class="gen-row" id="genrow2"></div>
-    <div class="note">원자재와 레버리지는 옵션을 매도하지 않으므로 초과수익&middot;참여율&middot;종합점수 계산에서 제외했습니다.
+    <div class="note">채권&middot;원자재&middot;레버리지는 옵션을 매도하지 않으므로 초과수익&middot;참여율&middot;종합점수 계산에서 제외했습니다.
       비교 테이블과 포트폴리오에는 담을 수 있지만, <b>커버드콜과 같은 자로 재지 않습니다</b>.</div>
   </div>
 
@@ -326,6 +326,7 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
       <span class="chip" data-f="gen" data-v="G2">2세대</span>
       <span class="chip" data-f="gen" data-v="G3">3세대</span>
       <span class="chip" data-f="gen" data-v="G4">4세대</span>
+      <span class="chip" data-f="gen" data-v="BD">채권</span>
       <span class="chip" data-f="gen" data-v="CM">원자재</span>
       <span class="chip" data-f="gen" data-v="LV">레버리지</span>
       <span style="width:10px"></span>
@@ -461,6 +462,7 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
         <span style="width:6px"></span>
         <button class="btn pri" id="pfadd">&#65291; 커버드콜</button>
         <button class="btn" id="pfaddbm">&#65291; 지수</button>
+        <button class="btn" id="pfaddbd">&#65291; 채권</button>
         <button class="btn" id="pfaddcm">&#65291; 원자재</button>
         <button class="btn" id="pfaddlv">&#65291; 레버리지</button>
         <button class="btn" id="pfexp">내보내기</button>
@@ -546,9 +548,9 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
 const DATA = /*__DATA__*/null;
 const R = DATA.rows.filter(r=>r.status==='ok');
 const GEN = DATA.generations;
-const GC = {G1:'#e0605e',G2:'#e8933a',G3:'#4a9eea',G4:'#a86fd6',BM:'#7a8798',CM:'#d4a017',LV:'#e84393'};
-const GN = {G1:'1세대',G2:'2세대',G3:'3세대',G4:'4세대',BM:'벤치마크',CM:'원자재',LV:'레버리지'};
-/* 커버드콜 세대. 원자재(CM)·레버리지(LV)·벤치마크(BM)는 옵션을 매도하지 않으므로
+const GC = {G1:'#e0605e',G2:'#e8933a',G3:'#4a9eea',G4:'#a86fd6',BM:'#7a8798',BD:'#16a085',CM:'#d4a017',LV:'#e84393'};
+const GN = {G1:'1세대',G2:'2세대',G3:'3세대',G4:'4세대',BM:'벤치마크',BD:'채권',CM:'원자재',LV:'레버리지'};
+/* 커버드콜 세대. 채권(BD)·원자재(CM)·레버리지(LV)·벤치마크(BM)는 옵션을 매도하지 않으므로
    평균·상관·점수 같은 '전략 평가' 계산에서 전부 빼야 숫자가 오염되지 않는다. */
 const CC = ['G1','G2','G3','G4'];
 const isCC = r=>CC.indexOf(r.gen)>=0;
@@ -612,7 +614,7 @@ document.getElementById('genrow').innerHTML = CC.map(g=>{
       <div>참여율 <b>${avg(s.map(r=>r.capture_1y))?.toFixed(0)??'–'}%</b></div>
     </div></div>`;
 }).join('');
-document.getElementById('genrow2').innerHTML = ['CM','LV'].filter(g=>GEN[g]).map(g=>{
+document.getElementById('genrow2').innerHTML = ['BD','CM','LV'].filter(g=>GEN[g]).map(g=>{
   const s=R.filter(r=>r.gen===g);
   return `<div class="gen" style="--c:${GC[g]}">
     <div class="t">${GEN[g].label}</div>
@@ -858,6 +860,8 @@ const OPT_GROUPS=[
   {label:'🇰🇷 국내 상장 지수', f:o=>o.market==='KR'&&o.gen==='BM'},
   {label:'🇺🇸 미국 커버드콜',  f:o=>o.market==='US'&&isCCo(o)},
   {label:'🇰🇷 국내 커버드콜',  f:o=>o.market==='KR'&&isCCo(o)},
+  {label:'🏦 채권 (미국)',     f:o=>o.market==='US'&&o.gen==='BD'},
+  {label:'🏦 채권 (국내)',     f:o=>o.market==='KR'&&o.gen==='BD'},
   {label:'🥇 원자재 (미국)',   f:o=>o.market==='US'&&o.gen==='CM'},
   {label:'🥇 원자재 (국내)',   f:o=>o.market==='KR'&&o.gen==='CM'},
   {label:'⚡ 레버리지 (미국)', f:o=>o.market==='US'&&o.gen==='LV'},
@@ -1414,7 +1418,7 @@ function drawCharts(C){
   /* ── 3) 현재 비중 도넛 ── */
   let plabels, pdata, pcolors;
   if(PIEK==='gen'){
-    const order=['BM','G1','G2','G3','G4','CM','LV'];
+    const order=['BM','G1','G2','G3','G4','BD','CM','LV'];
     const agg={};
     C.H.forEach(h=>{ agg[h.r.gen]=(agg[h.r.gen]||0)+h.val; });
     const ks=order.filter(k=>agg[k]>0);
@@ -1446,11 +1450,12 @@ function drawCharts(C){
   const usShare=C.totVal? C.H.filter(h=>h.us).reduce((s,h)=>s+h.val,0)/C.totVal*100 : 0;
   const hhi=C.totVal? C.H.reduce((s,h)=>s+Math.pow(h.val/C.totVal,2),0) : 0;
   document.getElementById('np3').innerHTML =
-    `커버드콜 <b>${ccShare.toFixed(1)}%</b> · 지수 <b>${share('BM').toFixed(1)}%</b> · 원자재 <b>${share('CM').toFixed(1)}%</b> · 레버리지 <b>${share('LV').toFixed(1)}%</b> · 미국 상장 <b>${usShare.toFixed(1)}%</b><br>
+    `커버드콜 <b>${ccShare.toFixed(1)}%</b> · 지수 <b>${share('BM').toFixed(1)}%</b> · 채권 <b>${share('BD').toFixed(1)}%</b> · 원자재 <b>${share('CM').toFixed(1)}%</b> · 레버리지 <b>${share('LV').toFixed(1)}%</b> · 미국 상장 <b>${usShare.toFixed(1)}%</b><br>
      최대 비중 종목은 <b>${top1?(top1.r.market==='US'?top1.r.ticker:top1.r.name):'–'}</b> ${top1&&C.totVal?(top1.val/C.totVal*100).toFixed(1):'–'}%,
      집중도(HHI) <b>${(hhi*10000).toFixed(0)}</b> — 1,500 아래면 분산, 2,500 위면 집중된 편입니다.
      ${share('LV')>15?'<br><b class="neg">레버리지 비중이 15%를 넘습니다.</b> 변동성 끌림 때문에 장기 보유 시 원지수 배수에 크게 못 미칠 수 있습니다.':''}
-     ${ccShare>60?'<br><b class="neg">커버드콜 비중이 60%를 넘습니다.</b> 총수익률이 목표라면 원지수 코어 비중을 먼저 확보하는 편이 유리합니다.':''}`;
+     ${ccShare>60?'<br><b class="neg">커버드콜 비중이 60%를 넘습니다.</b> 총수익률이 목표라면 원지수 코어 비중을 먼저 확보하는 편이 유리합니다.':''}
+     ${share('BD')>0?`<br>채권 <b>${share('BD').toFixed(1)}%</b>는 주식과 상관이 낮은 완충 자산입니다. 다만 장기채(TLT·국고채10년)는 금리 방향에 베팅하는 자산이라 '안전자산'으로 분류하면 낙폭을 과소평가하게 됩니다.`:''}`;
 }
 
 /* ---------- 이벤트 ---------- */
@@ -1516,6 +1521,7 @@ function addRow(pick, sorter){
 }
 document.getElementById('pfadd').onclick   = ()=>addRow(isCCo);
 document.getElementById('pfaddbm').onclick = ()=>addRow(o=>o.gen==='BM', byCore);
+document.getElementById('pfaddbd').onclick = ()=>addRow(o=>o.gen==='BD');
 document.getElementById('pfaddcm').onclick = ()=>addRow(o=>o.gen==='CM');
 document.getElementById('pfaddlv').onclick = ()=>addRow(o=>o.gen==='LV');
 document.getElementById('pfclr').onclick=()=>{
