@@ -275,10 +275,10 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
     <button data-tab="portfolio"><span class="ic">&#9670;</span>내 포트폴리오</button>
     <div class="subnav" data-for="portfolio">
       <a href="#s-month">이번 달 분배금</a>
+      <a href="#s-div">12개월 캘린더</a>
       <a href="#s-hold">보유 현황</a>
       <a href="#s-trend">수익 추이</a>
       <a href="#s-nav">NAV 추이</a>
-      <a href="#s-div">분배금 캘린더</a>
       <a href="#s-alloc">자산 비중</a>
     </div>
   </nav>
@@ -426,9 +426,12 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
   <div class="phead">
     <div>
       <h1>내 포트폴리오</h1>
-      <div class="sub">보유 내역은 이 브라우저에만 저장됩니다 &middot; 계좌 유형별 세후 &middot; 분배금 캘린더 &middot; 비중 관리</div>
+      <div class="sub">언제 얼마가 들어오는가를 먼저 봅니다 &middot; 계좌 유형별 세후 &middot; 보유 내역은 이 브라우저에만 저장됩니다</div>
     </div>
   </div>
+
+  <div id="pfcash" style="display:none">
+  <div class="kpis" id="pfincome"></div>
 
   <div class="card" id="s-month">
     <div class="chead">
@@ -449,6 +452,16 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
       </div>
     </div>
     <div class="note" id="mnnote"></div>
+  </div>
+
+  <div class="card" id="s-div">
+    <div class="chead">
+      <h2><span class="bar"></span>향후 12개월 예상 분배금</h2>
+      <div class="mini">최근 12개월 실적 분배금을 월별 가중치로 배분</div>
+    </div>
+    <div class="ch"><canvas id="cp2"></canvas></div>
+    <div class="note" id="np2"></div>
+  </div>
   </div>
 
   <div class="card" id="s-hold">
@@ -515,23 +528,16 @@ footer{color:var(--tx3);font-size:11.5px;line-height:1.85;
       <div class="note" id="np4"></div>
     </div>
 
-    <div class="grid g2">
-      <div class="card" id="s-div">
-        <h2><span class="bar"></span>향후 12개월 예상 분배금</h2>
-        <div class="ch"><canvas id="cp2"></canvas></div>
-        <div class="note" id="np2"></div>
-      </div>
-      <div class="card" id="s-alloc">
-        <div class="chead">
-          <h2><span class="bar"></span>현재 비중</h2>
-          <div class="seg" id="pieseg">
-            <button data-pie="item" class="on">종목별</button>
-            <button data-pie="gen">자산군별</button>
-          </div>
+    <div class="card" id="s-alloc">
+      <div class="chead">
+        <h2><span class="bar"></span>현재 비중</h2>
+        <div class="seg" id="pieseg">
+          <button data-pie="item" class="on">종목별</button>
+          <button data-pie="gen">자산군별</button>
         </div>
-        <div class="ch pie"><canvas id="cp3"></canvas></div>
-        <div class="note" id="np3"></div>
       </div>
+      <div class="ch pie"><canvas id="cp3"></canvas></div>
+      <div class="note" id="np3"></div>
     </div>
   </div>
 </section>
@@ -1072,8 +1078,8 @@ function renderPF(){
   document.getElementById('pftbl').parentElement.style.display = C.H.length?'':'none';
   empty.style.display = C.H.length?'none':'';
   document.getElementById('pfcharts').style.display = C.H.length?'':'none';
-  document.getElementById('s-month').style.display = C.H.length?'':'none';
-  renderMonth(C);
+  document.getElementById('pfcash').style.display = C.H.length?'':'none';
+  const MN = renderMonth(C);
 
   const olabel=o=>{
     let n=(o.name||'');
@@ -1117,20 +1123,37 @@ function renderPF(){
   const roi = C.totCost>0 ? C.totPL/C.totCost*100 : null;
   const yieldOnCost = C.totCost>0 ? C.totDiv/C.totCost*100 : null;
   const netDiv = C.totDiv - C.divTax;
-  document.getElementById('pfkpi').innerHTML = [
+  const kpiHTML = a => a.map(k=>
+    `<div class="kpi"><div class="l">${k[0]}</div><div class="v ${k[3]||''}">${k[1]}</div><div class="n">${k[2]}</div></div>`
+  ).join('');
+
+  document.getElementById('pfkpi').innerHTML = kpiHTML([
     ['총 평가금액', won0(C.totVal)+'원', `매입 ${won0(C.totCost)}원`],
     ['평가손익', (C.totPL>=0?'+':'')+won0(C.totPL)+'원',
-      roi==null?'–':`수익률 ${(roi>0?'+':'')+roi.toFixed(2)}%`],
-    ['연 예상 분배금', won0(C.totDiv)+'원',
+      roi==null?'–':`수익률 ${(roi>0?'+':'')+roi.toFixed(2)}%`,
+      C.totPL>0?'pos':C.totPL<0?'neg':''],
+    ['연 예상 분배금 (세전)', won0(C.totDiv)+'원',
       yieldOnCost==null?'–':`평단 대비 ${yieldOnCost.toFixed(2)}%`],
-    ['세후 연 분배금', won0(netDiv)+'원',
-      C.totDiv>0?`${C.A.label} · 실효 ${(C.divTax/C.totDiv*100).toFixed(1)}%`:C.A.label],
-    ['월 평균 수령액', won0(netDiv/12)+'원', '세후 기준'],
     ['평가익 과세 추정', won0(C.gainTax)+'원', '지금 전량 매도 가정'],
-  ].map(k=>{
-    const cls = k[0]==='평가손익' ? (C.totPL>0?'pos':C.totPL<0?'neg':'') : '';
-    return `<div class="kpi"><div class="l">${k[0]}</div><div class="v ${cls}">${k[1]}</div><div class="n">${k[2]}</div></div>`;
-  }).join('');
+  ]);
+
+  /* 상단 인컴 스트립.
+     이 화면의 목적은 '언제 얼마가 들어오는가'다. 자산 규모보다 현금흐름이 먼저 온다.
+     분배수익률은 평단(YoC)이 아니라 평가금액 기준을 앞세운다.
+     지금 이 돈을 넣으면 얼마가 나오느냐가 재배분 판단의 기준이기 때문이다. */
+  const yieldOnVal = C.totVal>0 ? netDiv/C.totVal*100 : null;
+  document.getElementById('pfincome').innerHTML = kpiHTML([
+    ['이번 달 예상 수령액 (세후)', MN? won0(MN.netThis)+'원' : '–',
+      MN&&MN.next
+        ? `다음 지급 ${MN.next.pay.getMonth()+1}월 ${MN.next.pay.getDate()}일 (${MN.dday===0?'오늘':'D-'+MN.dday}) · ${MN.next.h.r.ticker}`
+        : '남은 지급 예정 없음',
+      'pos'],
+    ['세후 연 예상 분배금', won0(netDiv)+'원', `세전 ${won0(C.totDiv)}원 · ${C.A.label}`],
+    ['월 평균 수령액 (세후)', won0(netDiv/12)+'원',
+      C.totDiv>0?`실효 세율 ${(C.divTax/C.totDiv*100).toFixed(1)}%`:'세후 기준'],
+    ['세후 분배수익률', yieldOnVal==null?'–':yieldOnVal.toFixed(2)+'%',
+      yieldOnCost==null?'평가금액 대비':`평가금액 대비 · 평단 대비 ${yieldOnCost.toFixed(2)}%`],
+  ]);
 
   const tgtSum = C.H.reduce((s,h)=>s+(h.it.target==null?0:num(h.it.target)),0);
   document.getElementById('pfnote').innerHTML =
@@ -1148,7 +1171,7 @@ let MNK=0;   /* 0 = 이번 달 · 1 = 2개월 · 2 = 3개월 */
 
 function renderMonth(C){
   const sum=document.getElementById('mnsum'), list=document.getElementById('mnlist');
-  if(!C.H.length){ return; }
+  if(!C.H.length){ return null; }
 
   const now   = new Date(); now.setHours(0,0,0,0);
   const from  = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -1203,6 +1226,9 @@ function renderMonth(C){
      금액은 <b>최근 12개월 실적 분배금</b>을 월별 가중치로 배분한 값이며, 커버드콜 분배금은 옵션 프리미엄에 따라 매월 달라집니다.
      주말은 직전 영업일로 당겼고 공휴일은 반영되지 않습니다.
      ${noSch.length?`<br><span class="neg">분배 일정 데이터가 없는 종목 ${noSch.length}종(${noSch.map(h=>h.r.ticker).join(', ')})은 제외했습니다.</span>`:''}`;
+
+  /* 상단 인컴 스트립이 같은 수치를 다시 계산하지 않도록 요약을 넘긴다. */
+  return {netThis:n(thisM), grossThis:g(thisM), cnt:thisM.length, done:done.length, next, dday};
 }
 
 /* ---------- 차트 ---------- */
